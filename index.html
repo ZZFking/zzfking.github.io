@@ -1409,11 +1409,12 @@ canvas{display:block}
   };
 
   /* =========================================================
-     游戏 7：躲避陨石
+     游戏 7：雪花飘飘（原「躲避陨石」）
+     火箭 = 抠好的吼叫头像（嘴巴朝上），陨石 = 咖喱块，受击音效 = 自定义片段
      ========================================================= */
   var G_DODGE = {
-    id: 'dodge', name: '躲避陨石', emoji: '🚀', cat: '反应', diff: 2,
-    desc: '驾驶飞船穿流星带，活得越久分越高。三条命，撞三次就结束。',
+    id: 'dodge', name: '雪花飘飘', emoji: '❄️', cat: '反应', diff: 2,
+    desc: '顶着咖喱雪暴往上冲，活得越久分越高。三条命，撞三次就结束。',
     better: 'high', fmt: function (v) { return v + ' 分'; },
     mount: function (root, api) {
       var W = 520, H = 520;
@@ -1424,17 +1425,24 @@ canvas{display:block}
         '<span class="hud-item">难度<b data-lv>1</b></span>' +
         '</div>' +
         '<div class="cv-wrap"><canvas class="cv" data-cv width="' + W + '" height="' + H + '"></canvas></div>' +
-        '<p class="tip">鼠标 / 手指左右滑动，或用 ← → / A D 控制飞船。</p>';
+        '<p class="tip">鼠标 / 手指左右滑动，或用 ← → / A D 控制。别被咖喱砸到。</p>';
 
       var cv = $('[data-cv]', root), ctx = cv.getContext('2d');
       var scoreEl = $('[data-score]', root), livesEl = $('[data-lives]', root), lvEl = $('[data-lv]', root);
       var stars, rocks, ship, score, lives, alive, spawnT, t, invuln, level;
 
+      // 素材
+      var headImg = new Image(); headImg.src = 'assets/head.png';
+      var curryImg = new Image(); curryImg.src = 'assets/curry.png';
+      var hitSnd = new Audio('assets/hit.mp3');
+      hitSnd.preload = 'auto';
+      var HIT_SECONDS = 1.6;   // 每次受击只播前 1.6 秒，避免盖住整局
+
       function reset() {
-        ship = { x: W / 2, y: H - 52, w: 30, h: 34 };
+        ship = { x: W / 2, y: H - 56, w: 40, h: 44, tilt: 0 };
         rocks = []; score = 0; lives = 3; alive = true; spawnT = 400; t = 0; invuln = 0; level = 1;
         stars = [];
-        for (var i = 0; i < 70; i++) stars.push({ x: rand(W), y: rand(H), r: Math.random() * 1.6 + .4, s: Math.random() * 1.6 + .5 });
+        for (var i = 0; i < 80; i++) stars.push({ x: rand(W), y: rand(H), r: Math.random() * 1.6 + .4, s: Math.random() * 1.6 + .5 });
         sync();
       }
       function sync() {
@@ -1444,13 +1452,14 @@ canvas{display:block}
       }
       function hurt() {
         if (invuln > 0 || !alive) return;
-        lives--; invuln = 1400; sfx('boom'); sync();
+        lives--; invuln = 1400; api.clip(hitSnd, HIT_SECONDS); sync();
         if (lives <= 0) {
           alive = false;
           api.submit(score);
           api.gameOver({
             result: 'lose',
-            title: '☄️ 飞船报废',
+            face: 'assets/lose-curry.jpg',
+            title: '🍛 被咖喱糊了一脸',
             sub: '坚持了 <b>' + (t / 1000).toFixed(1) + ' 秒</b><br>得分 ' + score,
             onRestart: reset
           });
@@ -1478,20 +1487,23 @@ canvas{display:block}
 
       function step(dt) {
         if (!alive) return;
+        var k1 = dt / 16.67;
         t += dt;
         score = Math.floor(t / 100) * 2 + Math.floor(t / 3000) * 10;
         level = 1 + Math.floor(t / 12000);
         if (invuln > 0) invuln -= dt;
-        if (left) ship.x = clamp(ship.x - 8 * (dt / 16.67), ship.w / 2, W - ship.w / 2);
-        if (right) ship.x = clamp(ship.x + 8 * (dt / 16.67), ship.w / 2, W - ship.w / 2);
+        var wantTilt = 0;
+        if (left) { ship.x = clamp(ship.x - 8 * k1, ship.w / 2, W - ship.w / 2); wantTilt = -.16; }
+        if (right) { ship.x = clamp(ship.x + 8 * k1, ship.w / 2, W - ship.w / 2); wantTilt = .16; }
+        ship.tilt += (wantTilt - ship.tilt) * Math.min(1, .18 * k1);
         for (var i = 0; i < stars.length; i++) {
-          stars[i].y += stars[i].s * (1 + level * .3) * (dt / 16.67);
+          stars[i].y += stars[i].s * (1 + level * .3) * k1;
           if (stars[i].y > H) { stars[i].y = -4; stars[i].x = rand(W); }
         }
         spawnT -= dt;
         if (spawnT <= 0) {
           spawnT = Math.max(150, 520 - level * 45) + rand(260);
-          var r = 10 + Math.random() * 18;
+          var r = 12 + Math.random() * 18;
           rocks.push({
             x: r + Math.random() * (W - r * 2), y: -r,
             r: r, vy: (1.7 + Math.random() * 1.5) * (1 + level * .16),
@@ -1500,7 +1512,7 @@ canvas{display:block}
         }
         for (i = rocks.length - 1; i >= 0; i--) {
           var k = rocks[i];
-          k.y += k.vy * (dt / 16.67); k.x += k.vx * (dt / 16.67); k.rot += k.rv * (dt / 16.67);
+          k.y += k.vy * k1; k.x += k.vx * k1; k.rot += k.rv * k1;
           var hx = clamp(k.x, ship.x - ship.w / 2, ship.x + ship.w / 2);
           var hy = clamp(k.y, ship.y - ship.h / 2, ship.y + ship.h / 2);
           var dx = k.x - hx, dy = k.y - hy;
@@ -1511,49 +1523,65 @@ canvas{display:block}
         }
         sync();
       }
+      var headReady = function () { return headImg.complete && headImg.naturalWidth > 0; };
+      var curryReady = function () { return curryImg.complete && curryImg.naturalWidth > 0; };
+
       function draw() {
         ctx.fillStyle = '#05070f'; ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = 'rgba(255,255,255,.55)';
+        // 飘雪
+        ctx.fillStyle = 'rgba(255,255,255,.6)';
         for (var i = 0; i < stars.length; i++) {
           var s = stars[i];
           ctx.globalAlpha = .25 + s.r / 2.4;
-          ctx.fillRect(s.x, s.y, s.r, s.r * 2.2);
+          ctx.fillRect(s.x, s.y, s.r, s.r * 2.4);
         }
         ctx.globalAlpha = 1;
+        // 咖喱块（原陨石）
         for (i = 0; i < rocks.length; i++) {
           var k = rocks[i];
           ctx.save();
           ctx.translate(k.x, k.y); ctx.rotate(k.rot);
-          var g = ctx.createRadialGradient(-k.r * .3, -k.r * .3, k.r * .2, 0, 0, k.r);
-          g.addColorStop(0, '#a1a1aa'); g.addColorStop(.6, '#52525b'); g.addColorStop(1, '#27272a');
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          for (var a = 0; a < 8; a++) {
-            var ang = a / 8 * Math.PI * 2, rr = k.r * (.78 + ((a * 37) % 10) / 42);
-            if (a === 0) ctx.moveTo(Math.cos(ang) * rr, Math.sin(ang) * rr);
-            else ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr);
+          if (curryReady()) {
+            ctx.drawImage(curryImg, -k.r, -k.r, k.r * 2, k.r * 2);
+          } else {
+            var g = ctx.createRadialGradient(-k.r * .3, -k.r * .3, k.r * .2, 0, 0, k.r);
+            g.addColorStop(0, '#e9c46a'); g.addColorStop(1, '#7c5b12');
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.arc(0, 0, k.r, 0, Math.PI * 2); ctx.fill();
           }
-          ctx.closePath(); ctx.fill();
           ctx.restore();
         }
+        // 火箭 = 吼叫的头（嘴巴朝上）
         if (alive) {
           var blink = invuln > 0 && Math.floor(invuln / 130) % 2 === 0;
           ctx.save();
-          ctx.globalAlpha = blink ? .3 : 1;
+          ctx.globalAlpha = blink ? .32 : 1;
           ctx.translate(ship.x, ship.y);
-          ctx.shadowColor = 'rgba(56,189,248,.95)'; ctx.shadowBlur = 20;
-          ctx.fillStyle = '#38bdf8';
-          ctx.beginPath();
-          ctx.moveTo(0, -ship.h / 2);
-          ctx.lineTo(ship.w / 2, ship.h / 2);
-          ctx.lineTo(0, ship.h / 2 - 9);
-          ctx.lineTo(-ship.w / 2, ship.h / 2);
-          ctx.closePath(); ctx.fill();
-          ctx.shadowColor = 'rgba(255,122,24,.95)';
+          // 尾焰
+          var fl = 14 + rand(9);
+          ctx.save();
+          ctx.shadowColor = 'rgba(255,122,24,.95)'; ctx.shadowBlur = 22;
           ctx.fillStyle = '#ff7a18';
           ctx.beginPath();
-          ctx.moveTo(-5, ship.h / 2 - 4); ctx.lineTo(5, ship.h / 2 - 4); ctx.lineTo(0, ship.h / 2 + 10 + rand(7));
+          ctx.moveTo(-7, ship.h / 2 - 2); ctx.lineTo(7, ship.h / 2 - 2); ctx.lineTo(0, ship.h / 2 + fl);
           ctx.closePath(); ctx.fill();
+          ctx.fillStyle = 'rgba(255,220,120,.95)';
+          ctx.beginPath();
+          ctx.moveTo(-3, ship.h / 2 - 2); ctx.lineTo(3, ship.h / 2 - 2); ctx.lineTo(0, ship.h / 2 + fl * .55);
+          ctx.closePath(); ctx.fill();
+          ctx.restore();
+          ctx.rotate(ship.tilt);
+          if (headReady()) {
+            var S = 78;
+            ctx.shadowColor = 'rgba(56,189,248,.55)'; ctx.shadowBlur = 18;
+            ctx.drawImage(headImg, -S / 2, -S / 2 - 2, S, S);
+          } else {
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.moveTo(0, -ship.h / 2); ctx.lineTo(ship.w / 2, ship.h / 2);
+            ctx.lineTo(0, ship.h / 2 - 9); ctx.lineTo(-ship.w / 2, ship.h / 2);
+            ctx.closePath(); ctx.fill();
+          }
           ctx.restore();
         }
       }
@@ -1621,6 +1649,33 @@ canvas{display:block}
         cleaner.add(function () { clearTimeout(id); });
         return id;
       },
+      // 播放一段音频片段（用于受击等音效），到点淡出并停止；受音效总开关控制
+      clip: function (audio, seconds) {
+        if (!audio || store.data.muted) return;
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = .9;
+          var stopped = false;
+          var stop = function () {
+            if (stopped) return;
+            stopped = true;
+            try { audio.pause(); } catch (e) { }
+          };
+          cleaner.add(stop);
+          var p = audio.play();
+          if (p && p.catch) p.catch(function () { });
+          if (seconds) {
+            var t0 = performance.now();
+            var iv = setInterval(function () {
+              var left = seconds * 1000 - (performance.now() - t0);
+              if (left <= 250) { try { audio.volume = Math.max(0, .9 * left / 250); } catch (e) { } }
+              if (left <= 0) { clearInterval(iv); stop(); }
+            }, 40);
+            cleaner.add(function () { clearInterval(iv); });
+          }
+        } catch (e) { }
+      },
       submit: function (score) {
         if (typeof score !== 'number' || !isFinite(score)) return false;
         var prev = store.data.bests[g.id];
@@ -1637,11 +1692,12 @@ canvas{display:block}
         return better;
       },
       gameOver: function (opt) {
-        // result 决定结算脸和主标题：赢了用图二，输了用图三
+        // result 决定结算脸和主标题：赢了用图二，输了用图三；opt.face 可指定专属图
         var win = opt.result === 'win';
+        var face = opt.face || ('assets/' + (win ? 'win' : 'lose') + '.jpg');
         var node = html(
           '<div class="gover"><div class="gover-card ' + (win ? 'win' : 'lose') + '">' +
-          '<span class="gover-face"><img src="assets/' + (win ? 'win' : 'lose') + '.jpg" alt="' + (win ? '凡哥赢了' : '凡哥输了') + '" width="760" height="760"></span>' +
+          '<span class="gover-face"><img src="' + face + '" alt="' + (win ? '凡哥赢了' : '凡哥输了') + '" width="760" height="760"></span>' +
           '<div class="gover-verdict">' + (win ? '你赢了！' : '你输了！') + '</div>' +
           '<h3>' + opt.title + '</h3>' +
           '<p>' + opt.sub + '</p>' +
