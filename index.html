@@ -1557,19 +1557,6 @@ canvas{display:block}
           ctx.save();
           ctx.globalAlpha = blink ? .32 : 1;
           ctx.translate(ship.x, ship.y);
-          // 尾焰
-          var fl = 14 + rand(9);
-          ctx.save();
-          ctx.shadowColor = 'rgba(255,122,24,.95)'; ctx.shadowBlur = 22;
-          ctx.fillStyle = '#ff7a18';
-          ctx.beginPath();
-          ctx.moveTo(-7, ship.h / 2 - 2); ctx.lineTo(7, ship.h / 2 - 2); ctx.lineTo(0, ship.h / 2 + fl);
-          ctx.closePath(); ctx.fill();
-          ctx.fillStyle = 'rgba(255,220,120,.95)';
-          ctx.beginPath();
-          ctx.moveTo(-3, ship.h / 2 - 2); ctx.lineTo(3, ship.h / 2 - 2); ctx.lineTo(0, ship.h / 2 + fl * .55);
-          ctx.closePath(); ctx.fill();
-          ctx.restore();
           ctx.rotate(ship.tilt);
           if (headReady()) {
             var S = 78;
