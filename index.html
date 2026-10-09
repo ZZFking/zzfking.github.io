@@ -122,6 +122,8 @@ canvas{display:block}
   background:linear-gradient(150deg,rgba(255,122,24,.9),rgba(168,85,247,.85));
   box-shadow:0 26px 70px rgba(255,90,60,.35),inset 0 0 0 1px rgba(255,255,255,.22)}
 .core .face{font-size:clamp(44px,11vw,74px);font-weight:900;color:#0d0710;letter-spacing:2px}
+.core .core-photo{position:absolute;inset:0;border-radius:inherit;overflow:hidden;display:block}
+.core .core-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 16%;display:block}
 .core .plate{position:absolute;bottom:-16px;white-space:nowrap;font-size:12.5px;padding:7px 14px;border-radius:999px;background:rgba(8,10,20,.92);border:1px solid var(--line-2);color:var(--dim)}
 .core .plate b{color:var(--o)}
 .sat{position:absolute;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;font-size:22px;
@@ -154,7 +156,8 @@ canvas{display:block}
 .card.soon:hover{transform:none;box-shadow:none;border-color:var(--line)}
 .card-top{display:flex;align-items:center;gap:14px}
 .card-emoji{width:56px;height:56px;flex:0 0 56px;display:grid;place-items:center;font-size:28px;border-radius:16px;
-  background:rgba(255,255,255,.07);border:1px solid var(--line)}
+  background:rgba(255,255,255,.07);border:1px solid var(--line);overflow:hidden}
+.card-emoji img{width:100%;height:100%;object-fit:cover;object-position:50% 16%;display:block}
 .card-name{font-size:17.5px;font-weight:700;letter-spacing:.3px}
 .card-cat{font-size:11.5px;color:var(--dim);margin-top:4px;display:flex;align-items:center;gap:8px}
 .stars{color:var(--o);letter-spacing:1px}
@@ -216,9 +219,21 @@ canvas{display:block}
 
 /* 结算层 */
 .gover{position:fixed;inset:0;z-index:95;display:grid;place-items:center;background:rgba(4,5,12,.66);backdrop-filter:blur(6px);animation:fade .2s}
-.gover-card{width:min(360px,90vw);text-align:center;border:1px solid var(--line-2);border-radius:22px;padding:30px 24px;
+.gover-card{width:min(380px,90vw);text-align:center;border:1px solid var(--line-2);border-radius:22px;padding:26px 24px 30px;
   background:linear-gradient(170deg,rgba(28,20,40,.96),rgba(10,11,20,.98));box-shadow:0 30px 80px rgba(0,0,0,.7)}
-.gover-card h3{font-size:23px;margin-bottom:10px}
+.gover-card.win{border-color:rgba(34,211,167,.45)}
+.gover-card.lose{border-color:rgba(251,92,116,.38)}
+.gover-face{display:block;width:118px;height:118px;margin:0 auto 16px;border-radius:50%;overflow:hidden;
+  border:3px solid var(--line-2);background:#0b0e18}
+.gover-face img{width:100%;height:100%;object-fit:cover;display:block}
+.gover-card.win .gover-face{border-color:var(--g);box-shadow:0 0 0 5px rgba(34,211,167,.18),0 14px 34px rgba(0,0,0,.5);
+  animation:bounce .65s cubic-bezier(.3,1.5,.5,1)}
+.gover-card.lose .gover-face{border-color:#fb5c74;box-shadow:0 0 0 5px rgba(244,63,94,.14),0 14px 34px rgba(0,0,0,.5)}
+@keyframes bounce{0%{transform:scale(.55) rotate(-9deg);opacity:0}60%{transform:scale(1.09) rotate(3deg)}100%{transform:none;opacity:1}}
+.gover-card .gover-verdict{font-size:28px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.gover-card.win .gover-verdict{color:var(--g);text-shadow:0 0 24px rgba(34,211,167,.45)}
+.gover-card.lose .gover-verdict{color:#fb5c74;text-shadow:0 0 24px rgba(244,63,94,.4)}
+.gover-card h3{font-size:16px;font-weight:600;color:#c8d0e4;margin-bottom:8px}
 .gover-card p{color:var(--dim);font-size:14px;line-height:1.8}
 .gover-card p b{color:var(--o);font-size:19px}
 .gover-actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap}
@@ -335,7 +350,7 @@ canvas{display:block}
       <div class="orbit">
         <span class="ring"></span><span class="ring r2"></span><span class="ring r3"></span>
         <div class="core">
-          <span class="face">凡</span>
+          <span class="core-photo"><img src="assets/hero.jpg" alt="凡哥 章哲凡" width="640" height="640"></span>
           <span class="plate">凡哥 · <b>章哲凡</b></span>
         </div>
         <span class="sat s1">🐍</span><span class="sat s2">🧱</span>
@@ -368,7 +383,7 @@ canvas{display:block}
     </div>
     <div class="game-grid">
       <article class="card" style="cursor:default;--glow:rgba(255,122,24,.3)">
-        <div class="card-top"><span class="card-emoji">🧑‍🎓</span>
+        <div class="card-top"><span class="card-emoji"><img src="assets/hero.jpg" alt="凡哥 章哲凡" width="640" height="640"></span>
           <div><div class="card-name">章哲凡 / 凡哥</div><div class="card-cat">高二（3）班 · 眼镜少年</div></div>
         </div>
         <p class="card-desc">做这个空间的理由很简单：我写的小游戏散在各处，每次想玩都得翻收藏夹。干脆做一个入口，全部收进来，点开就能玩。</p>
@@ -605,6 +620,7 @@ canvas{display:block}
         alive = false; sfx('lose');
         api.submit(score);
         api.gameOver({
+          result: 'lose',
           title: '💥 撞上了',
           sub: '本局得分 <b>' + score + '</b><br>蛇长 ' + snake.length + ' 节',
           onRestart: reset
@@ -749,6 +765,7 @@ canvas{display:block}
       function endMatch() {
         over = true; sfx('lose'); api.submit(score);
         api.gameOver({
+          result: 'lose',
           title: '🏁 打完了',
           sub: '最终得分 <b>' + score + '</b><br>坚持到第 ' + wave + ' 波',
           onRestart: reset
@@ -957,6 +974,7 @@ canvas{display:block}
           over = true; sfx('lose');
           api.submit(score);
           api.gameOver({
+            result: 'lose',
             title: '🧊 格子满了',
             sub: '得分 <b>' + score + '</b><br>最大方块 ' + maxTile(),
             onRestart: reset
@@ -1054,6 +1072,7 @@ canvas{display:block}
         sfx('win');
         var isBest = api.submit(sec);
         api.gameOver({
+          result: 'win',
           title: '🎊 全配对成功',
           sub: '用时 <b>' + sec.toFixed(1) + ' 秒</b><br>共 ' + moves + ' 步' + (isBest ? '<br>✨ 新纪录！' : ''),
           onRestart: reset
@@ -1199,7 +1218,7 @@ canvas{display:block}
         for (var k = 0; k < TOTAL; k++) if (cells[k].mine) opened[k] = 1;
         opened[i] = 1;
         paint();
-        api.gameOver({ title: '💥 踩雷了', sub: '别灰心，再来一次？<br>这局用时 ' + elapsed() + ' 秒', onRestart: reset });
+        api.gameOver({ result: 'lose', title: '💥 踩雷了', sub: '别灰心，再来一次？<br>这局用时 ' + elapsed() + ' 秒', onRestart: reset });
       }
       function elapsed() { return started ? ((performance.now() - t0) / 1000).toFixed(1) : '0.0'; }
       function checkWin(openedCount) {
@@ -1208,6 +1227,7 @@ canvas{display:block}
           var sec = parseFloat(elapsed());
           var isBest = api.submit(sec);
           api.gameOver({
+            result: 'win',
             title: '🎉 全部排完',
             sub: '用时 <b>' + sec.toFixed(1) + ' 秒</b>' + (isBest ? '<br>✨ 新纪录！' : ''),
             onRestart: reset
@@ -1296,6 +1316,7 @@ canvas{display:block}
           if (win) sfx('win'); else sfx('lose');
           api.submit(me.score);
           api.gameOver({
+            result: win ? 'win' : 'lose',
             title: win ? '🏆 凡哥赢了' : '😤 电脑赢了',
             sub: '比分 <b>' + me.score + ' : ' + ai.score + '</b>',
             onRestart: reset
@@ -1428,6 +1449,7 @@ canvas{display:block}
           alive = false;
           api.submit(score);
           api.gameOver({
+            result: 'lose',
             title: '☄️ 飞船报废',
             sub: '坚持了 <b>' + (t / 1000).toFixed(1) + ' 秒</b><br>得分 ' + score,
             onRestart: reset
@@ -1615,8 +1637,12 @@ canvas{display:block}
         return better;
       },
       gameOver: function (opt) {
+        // result 决定结算脸和主标题：赢了用图二，输了用图三
+        var win = opt.result === 'win';
         var node = html(
-          '<div class="gover"><div class="gover-card">' +
+          '<div class="gover"><div class="gover-card ' + (win ? 'win' : 'lose') + '">' +
+          '<span class="gover-face"><img src="assets/' + (win ? 'win' : 'lose') + '.jpg" alt="' + (win ? '凡哥赢了' : '凡哥输了') + '" width="760" height="760"></span>' +
+          '<div class="gover-verdict">' + (win ? '你赢了！' : '你输了！') + '</div>' +
           '<h3>' + opt.title + '</h3>' +
           '<p>' + opt.sub + '</p>' +
           '<div class="gover-actions">' +
