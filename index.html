@@ -238,6 +238,49 @@ canvas{display:block}
 .gover-card p b{color:var(--o);font-size:19px}
 .gover-actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap}
 
+/* 挂机经营：凡哥的奶茶帝国 */
+.idle{display:flex;flex-direction:column;gap:13px;width:min(660px,100%)}
+.idle-goal{display:flex;flex-direction:column;gap:7px}
+.idle-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
+.idle-bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--o),#ff4d6d,var(--p));transition:width .25s}
+.idle-goal span{font-size:12.5px;color:var(--dim);text-align:center}
+.idle-click{display:flex;align-items:center;justify-content:center;gap:13px;padding:15px;border-radius:18px;cursor:pointer;
+  border:1px solid rgba(255,122,24,.42);background:linear-gradient(120deg,rgba(255,122,24,.2),rgba(168,85,247,.2));
+  transition:transform .08s,box-shadow .2s;color:var(--text)}
+.idle-click:hover{box-shadow:0 12px 34px rgba(255,90,60,.26)}
+.idle-click:active{transform:scale(.975)}
+.idle-click .idle-face{font-size:27px}
+.idle-click span{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.idle-click b{font-size:17px;font-weight:800;letter-spacing:.5px}
+.idle-click em{font-style:normal;font-size:12.5px;color:#ffd9c0;font-weight:600;font-variant-numeric:tabular-nums}
+.idle-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.idle-panel{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:12px}
+.idle-panel h4{font-size:12px;color:var(--dim);letter-spacing:1px;margin-bottom:10px;font-weight:600}
+.idle-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;margin-bottom:7px;
+  border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;transition:background .15s,border-color .15s;color:var(--text)}
+.idle-row:last-child{margin-bottom:0}
+.idle-row.can{border-color:rgba(34,211,167,.5);background:rgba(34,211,167,.09)}
+.idle-row.can:hover{background:rgba(34,211,167,.17)}
+.idle-row.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.idle-row .idle-emoji{font-size:20px;width:26px;text-align:center;flex:0 0 26px}
+.idle-row .idle-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.idle-row .idle-info b{font-size:13.5px;font-weight:600}
+.idle-row .idle-info b i{font-style:normal;color:var(--o);font-weight:800}
+.idle-row .idle-info em{font-style:normal;font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idle-row .idle-buy{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:0 0 auto}
+.idle-row .idle-buy b{font-size:13px;font-variant-numeric:tabular-nums}
+.idle-row .idle-buy em{font-style:normal;font-size:10.5px;color:var(--dim)}
+.idle-offline{border:1px solid rgba(34,211,167,.4);background:rgba(34,211,167,.1);border-radius:14px;padding:11px 14px;
+  font-size:13px;line-height:1.7;color:#bff5e6}
+.idle-offline b{color:#fff}
+.idle-floats{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.idle-float{position:absolute;transform:translate(-50%,-50%);font-weight:800;font-size:15px;color:#ffd9c0;
+  text-shadow:0 2px 10px rgba(0,0,0,.65);animation:idleFloat .75s ease-out forwards;white-space:nowrap}
+.idle-float.good{color:#5eead4}
+@keyframes idleFloat{from{opacity:1}to{opacity:0;transform:translate(-50%,-190%)}}
+@media (max-width:680px){.idle-cols{grid-template-columns:1fr}}
+
 /* 2048 */
 .g2048{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:min(430px,90vw);aspect-ratio:1;
   padding:10px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid var(--line);touch-action:none}
@@ -1577,8 +1620,250 @@ canvas{display:block}
     }
   };
 
-  var GAMES = [G_SNAKE, G_BREAK, G_2048, G_MEM, G_MINE, G_PONG, G_DODGE];
-  var CATS = ['全部', '街机', '益智', '反应'];
+  /* =========================================================
+     游戏 8：凡哥的奶茶帝国（挂机 / 经营）
+     数值经模拟调平：纯挂机约 4.5 分钟通关，边点边玩更快
+     ========================================================= */
+  function money(n) {
+    n = Math.max(0, n || 0);
+    if (n < 10000) return '¥' + Math.floor(n).toLocaleString('en-US');
+    if (n < 100000000) {
+      var w = n / 10000;
+      return '¥' + (w >= 1000 ? w.toFixed(0) : w.toFixed(2)) + '万';
+    }
+    return '¥' + (n / 100000000).toFixed(2) + '亿';
+  }
+  function rateFmt(n) {
+    if (n < 10) return '¥' + n.toFixed(1);
+    if (n < 10000) return '¥' + Math.round(n);
+    return money(n);
+  }
+  function durFmt(sec) {
+    sec = Math.max(0, Math.round(sec));
+    if (sec < 60) return sec + ' 秒';
+    var m = Math.floor(sec / 60), h = Math.floor(m / 60);
+    if (h > 0) return h + ' 小时 ' + (m % 60) + ' 分';
+    return m + ' 分 ' + (sec % 60) + ' 秒';
+  }
+
+  var G_IDLE = {
+    id: 'idle', name: '凡哥的奶茶帝国', emoji: '🧋', cat: '经营', diff: 1,
+    desc: '从校门口一个小摊做起，买产业、开连锁。关掉页面也在帮你赚，回来一次结清。',
+    better: 'high', fmt: money,
+    mount: function (root, api) {
+      var KEY = 'fange-idle-v1', GOAL = 1000000, OFFLINE_CAP = 8 * 3600, GROWTH = 1.10;
+      var SHOPS = [
+        { key: 'stall', name: '校门口小摊', emoji: '🍢', cost: 10, income: 1.2, free: 1 },
+        { key: 'store', name: '便利店', emoji: '🏪', cost: 150, income: 20, free: 0 },
+        { key: 'tea', name: '奶茶店', emoji: '🧋', cost: 2000, income: 300, free: 0 },
+        { key: 'chain', name: '连锁分店', emoji: '🏬', cost: 28000, income: 5000, free: 0 },
+        { key: 'plant', name: '中央厨房', emoji: '🏭', cost: 120000, income: 26000, free: 0 },
+        { key: 'group', name: '凡哥集团', emoji: '🏛️', cost: 1500000, income: 380000, free: 0 }
+      ];
+      var UPS = [
+        { key: 'net', name: '网红打卡', desc: '点击收益 ×5', cost: 400, type: 'click', mult: 5 },
+        { key: 'take', name: '外卖上线', desc: '全部产业收益 ×2', cost: 3000, type: 'global', mult: 2 },
+        { key: 'night', name: '夜班店员', desc: '离线收益 50% → 100%', cost: 15000, type: 'offline' },
+        { key: 'sign', name: '签名照', desc: '点击收益 ×10', cost: 25000, type: 'click', mult: 10 },
+        { key: 'agent', name: '校园代理', desc: '全部产业收益 ×2.5', cost: 40000, type: 'global', mult: 2.5 },
+        { key: 'ip', name: '凡哥联名 IP', desc: '全部产业收益 ×4', cost: 300000, type: 'global', mult: 4 }
+      ];
+
+      /* ---------- 存档 ---------- */
+      function blank() {
+        return { cash: 0, total: 0, clicks: 0, seconds: 0, won: false,
+                 shops: { stall: 1 }, ups: {}, last: Date.now() };
+      }
+      var S = blank();
+      try {
+        var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+        if (raw && typeof raw === 'object') {
+          Object.keys(S).forEach(function (k) { if (raw[k] !== undefined) S[k] = raw[k]; });
+          if (!S.shops || typeof S.shops !== 'object') S.shops = { stall: 1 };
+          if (!S.ups || typeof S.ups !== 'object') S.ups = {};
+          if (!S.shops.stall) S.shops.stall = 1;
+        }
+      } catch (e) { }
+      var awaySec = Math.max(0, (Date.now() - (S.last || Date.now())) / 1000);
+      var save = function () { S.last = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } };
+      api.onClose(save);
+
+      /* ---------- 数值 ---------- */
+      function owned(sh) { return S.shops[sh.key] || 0; }
+      function globalMult() {
+        var m = 1;
+        UPS.forEach(function (u) { if (u.type === 'global' && S.ups[u.key]) m *= u.mult; });
+        return m;
+      }
+      function clickMult() {
+        var m = 1;
+        UPS.forEach(function (u) { if (u.type === 'click' && S.ups[u.key]) m *= u.mult; });
+        return m;
+      }
+      function incomePerSec() {
+        var s = 0;
+        SHOPS.forEach(function (sh) { s += owned(sh) * sh.income; });
+        return s * globalMult();
+      }
+      function clickPower() { return clickMult() + incomePerSec() * 0.02; }
+      function costOf(sh) { return Math.floor(sh.cost * Math.pow(GROWTH, owned(sh) - sh.free)); }
+      function offlineRate() { return S.ups['night'] ? 1 : 0.5; }
+      function shopCount() {
+        var n = 0;
+        SHOPS.forEach(function (sh) { n += owned(sh); });
+        return n;
+      }
+
+      /* ---------- 界面 ---------- */
+      root.innerHTML =
+        '<div class="hud">' +
+        '<span class="hud-item">现金<b data-cash>¥0</b></span>' +
+        '<span class="hud-item">每秒<b data-rate>¥0</b></span>' +
+        '<span class="hud-item">累计<b data-total>¥0</b></span>' +
+        '</div>' +
+        '<div class="idle">' +
+        '<div class="idle-goal"><div class="idle-bar"><i data-bar></i></div><span data-goal></span></div>' +
+        '<button class="idle-click" data-click><span class="idle-face">🧋</span>' +
+        '<span><b>凡哥出手</b><em data-cp></em></span></button>' +
+        '<div class="idle-offline" data-off hidden></div>' +
+        '<div class="idle-cols">' +
+        '<div class="idle-panel"><h4>产业（点一下买下）</h4><div data-shops></div></div>' +
+        '<div class="idle-panel"><h4>升级（一次性）</h4><div data-ups></div></div>' +
+        '</div>' +
+        '<p class="tip">关掉这个游戏、甚至关掉网页，店员都在帮你赚；回来按离线时长一次性结算，最多算 8 小时。</p>' +
+        '</div>' +
+        '<div class="idle-floats"></div>';
+
+      var cashEl = $('[data-cash]', root), rateEl = $('[data-rate]', root), totalEl = $('[data-total]', root);
+      var barEl = $('[data-bar]', root), goalEl = $('[data-goal]', root), offEl = $('[data-off]', root);
+      var floatsEl = $('.idle-floats', root), shopsEl = $('[data-shops]', root), upsEl = $('[data-ups]', root);
+
+      var shopRows = [], upRows = [];
+      SHOPS.forEach(function (sh) {
+        var row = html('<button class="idle-row" type="button">' +
+          '<span class="idle-emoji">' + sh.emoji + '</span>' +
+          '<span class="idle-info"><b>' + sh.name + ' <i>×0</i></b><em>+' + rateFmt(sh.income) + '/秒</em></span>' +
+          '<span class="idle-buy"><b>¥0</b><em>买下</em></span></button>');
+        row.__sh = sh;
+        api.on(row, 'click', function () { buyShop(sh, row); });
+        shopsEl.appendChild(row);
+        shopRows.push(row);
+      });
+      UPS.forEach(function (u) {
+        var row = html('<button class="idle-row" type="button">' +
+          '<span class="idle-emoji">🎁</span>' +
+          '<span class="idle-info"><b>' + u.name + '</b><em>' + u.desc + '</em></span>' +
+          '<span class="idle-buy"><b>' + money(u.cost) + '</b><em>升级</em></span></button>');
+        row.__up = u;
+        if (S.ups[u.key]) row.remove();
+        else {
+          api.on(row, 'click', function () { buyUp(u, row); });
+          upsEl.appendChild(row);
+          upRows.push(row);
+        }
+      });
+
+      function floatText(x, y, txt, cls) {
+        var f = html('<span class="idle-float ' + (cls || '') + '">' + txt + '</span>');
+        f.style.left = x + 'px'; f.style.top = y + 'px';
+        floatsEl.appendChild(f);
+        api.timeout(function () { f.remove(); }, 760);
+      }
+      function buyShop(sh, row) {
+        var c = costOf(sh);
+        if (S.cash < c) { sfx('click'); row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); return; }
+        S.cash -= c;
+        S.shops[sh.key] = owned(sh) + 1;
+        sfx('eat'); save();
+        floatText(window.innerWidth / 2, window.innerHeight / 2 - 120, sh.emoji + ' +1', 'good');
+        paint();
+      }
+      function buyUp(u, row) {
+        if (S.ups[u.key] || S.cash < u.cost) { sfx('click'); return; }
+        S.cash -= u.cost;
+        S.ups[u.key] = 1;
+        sfx('good'); save();
+        var i = upRows.indexOf(row);
+        if (i >= 0) upRows.splice(i, 1);
+        row.remove();
+        floatText(window.innerWidth / 2, window.innerHeight / 2 - 120, '✔ ' + u.name, 'good');
+        paint();
+      }
+      api.on($('[data-click]', root), 'click', function (e) {
+        var g = clickPower();
+        S.cash += g; S.total += g; S.clicks++;
+        sfx('click');
+        floatText(e.clientX, e.clientY, '+' + money(g));
+      });
+
+      /* ---------- 离线结算 ---------- */
+      var offGain = 0;
+      if (awaySec > 30) {
+        offGain = incomePerSec() * Math.min(awaySec, OFFLINE_CAP) * offlineRate();
+        if (offGain > 0) {
+          S.cash += offGain; S.total += offGain;
+          offEl.hidden = false;
+          offEl.innerHTML = '😴 你离开了 <b>' + durFmt(awaySec) + '</b>，店员替你赚了 <b>' + money(offGain) + '</b>' +
+            '（效率 ' + Math.round(offlineRate() * 100) + '%' + (awaySec > OFFLINE_CAP ? '，已按 8 小时上限结算' : '') + '）';
+        }
+      }
+
+      /* ---------- 渲染与主循环 ---------- */
+      function paint() {
+        var inc = incomePerSec(), pct = clamp(S.total / GOAL, 0, 1);
+        cashEl.textContent = money(S.cash);
+        rateEl.textContent = rateFmt(inc) + '/秒';
+        totalEl.textContent = money(S.total);
+        $('[data-cp]', root).textContent = '点击 +' + money(clickPower());
+        barEl.style.width = (pct * 100).toFixed(1) + '%';
+        goalEl.textContent = S.won
+          ? '✅ 已成为校园传说 · 累计 ' + money(S.total) + '（还能继续做大）'
+          : '目标：累计收入 ¥100万（' + Math.floor(pct * 100) + '%）';
+        shopRows.forEach(function (row) {
+          var sh = row.__sh, c = costOf(sh);
+          $('.idle-info b i', row).textContent = '×' + owned(sh);
+          $('.idle-buy b', row).textContent = money(c);
+          row.classList.toggle('can', S.cash >= c);
+        });
+        upRows.forEach(function (row) {
+          row.classList.toggle('can', S.cash >= row.__up.cost);
+        });
+      }
+
+      var saveAcc = 0, uiAcc = 0, submitAcc = 0;
+      api.loop(function (dt) {
+        var sec = dt / 1000;
+        var inc = incomePerSec();
+        S.cash += inc * sec; S.total += inc * sec; S.seconds += sec;
+        saveAcc += dt;
+        if (saveAcc >= 2000) { saveAcc = 0; save(); }
+        submitAcc += dt;
+        if (submitAcc >= 5000) { submitAcc = 0; api.submit(Math.floor(S.total)); }
+        uiAcc += dt;
+        if (uiAcc >= 120) { uiAcc = 0; paint(); }
+
+        if (!S.won && S.total >= GOAL) {
+          S.won = true; save();
+          api.submit(Math.floor(S.total));
+          sfx('win');
+          api.gameOver({
+            result: 'win',
+            title: '🏆 凡哥成了',
+            sub: '累计赚到 <b>' + money(S.total) + '</b><br>用时 ' + durFmt(S.seconds) + ' · 开了 ' + shopCount() + ' 家店' +
+                 '<br>还有更大的产业可以继续解锁',
+            againText: '继续经营',
+            onRestart: function () { paint(); }
+          });
+        }
+      });
+
+      paint();
+      if (offGain > 0) sfx('good');
+    }
+  };
+
+  var GAMES = [G_SNAKE, G_BREAK, G_2048, G_MEM, G_MINE, G_PONG, G_DODGE, G_IDLE];
+  var CATS = ['全部', '街机', '益智', '反应', '经营'];
 
   /* =========================================================
      启动舞台
@@ -1636,6 +1921,8 @@ canvas{display:block}
         cleaner.add(function () { clearTimeout(id); });
         return id;
       },
+      // 游戏退出时执行的收尾（例如存档）
+      onClose: function (fn) { cleaner.add(fn); },
       // 播放一段音频片段（用于受击等音效），到点淡出并停止；受音效总开关控制
       clip: function (audio, seconds) {
         if (!audio || store.data.muted) return;
@@ -1689,7 +1976,7 @@ canvas{display:block}
           '<h3>' + opt.title + '</h3>' +
           '<p>' + opt.sub + '</p>' +
           '<div class="gover-actions">' +
-          '<button class="btn primary" data-again>再来一局</button>' +
+          '<button class="btn primary" data-again>' + (opt.againText || '再来一局') + '</button>' +
           '<button class="btn ghost" data-exit>返回大厅</button>' +
           '</div></div></div>'
         );
