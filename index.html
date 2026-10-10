@@ -281,6 +281,41 @@ canvas{display:block}
 @keyframes idleFloat{from{opacity:1}to{opacity:0;transform:translate(-50%,-190%)}}
 @media (max-width:680px){.idle-cols{grid-template-columns:1fr}}
 
+/* 高考冲刺（文字选择） */
+.ex{display:flex;flex-direction:column;gap:12px;width:min(660px,100%)}
+.ex-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.ex-stat{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:9px 11px}
+.ex-stat span{font-size:11.5px;color:var(--dim)}
+.ex-stat b{display:block;font-size:19px;margin:3px 0 7px;font-variant-numeric:tabular-nums}
+.ex-stat i{display:block;height:5px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
+.ex-stat i u{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--o),#ff4d6d);transition:width .3s}
+.ex-stat.s2 i u{background:linear-gradient(90deg,#22d3a7,#38bdf8)}
+.ex-stat.s3 i u{background:linear-gradient(90deg,#a855f7,#38bdf8)}
+.ex-stat.s4 i u{background:linear-gradient(90deg,#facc15,#f97316)}
+.ex-log{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.3);padding:12px 14px;
+  height:186px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+.ex-log::-webkit-scrollbar{width:7px}
+.ex-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:99px}
+.ex-line{font-size:13px;line-height:1.65;color:#c3ccdf}
+.ex-line b{color:var(--o)}
+.ex-line.exam{color:#ffdcc2;border-left:3px solid var(--o);background:rgba(255,122,24,.09);border-radius:0 9px 9px 0;padding:8px 11px}
+.ex-line.evt{color:#9fe8d6}
+.ex-ask{font-size:13.5px;color:var(--dim);text-align:center}
+.ex-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;grid-auto-rows:1fr}
+.ex-act{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 12px;border-radius:14px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);transition:.15s;text-align:left;color:var(--text)}
+.ex-act:hover{border-color:var(--line-2);background:rgba(255,255,255,.085);transform:translateY(-2px)}
+.ex-act:active{transform:none}
+.ex-act .ex-emoji{font-size:19px}
+.ex-act b{font-size:13.5px;font-weight:600}
+.ex-act em{font-style:normal;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.ex-act em.up{color:#5eead4}
+.ex-act em.down{color:#a9b4c9}
+@media (max-width:640px){
+  .ex-stats{grid-template-columns:repeat(2,1fr)}
+  .ex-actions{grid-template-columns:repeat(2,1fr)}
+  .ex-log{height:160px}
+}
 /* 2048 */
 .g2048{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:min(430px,90vw);aspect-ratio:1;
   padding:10px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid var(--line);touch-action:none}
@@ -1862,8 +1897,226 @@ canvas{display:block}
     }
   };
 
-  var GAMES = [G_SNAKE, G_BREAK, G_2048, G_MEM, G_MINE, G_PONG, G_DODGE, G_IDLE];
-  var CATS = ['全部', '街机', '益智', '反应', '经营'];
+  /* =========================================================
+     游戏 9：凡哥的高考冲刺（文字选择 / 养成）
+     30 天，每天一个选择；体力与心态会放大或惩罚学习效率
+     ========================================================= */
+  var G_EXAM = {
+    id: 'exam', name: '凡哥的高考冲刺', emoji: '🎓', cat: '剧情', diff: 2,
+    desc: '高考前最后 30 天：刷题、补觉、稳住心态。每天一个选择，第 30 天进考场。',
+    better: 'high', fmt: function (v) { return v + ' 分'; },
+    mount: function (root, api) {
+      var DAYS = 30, EXAM_DAYS = [7, 14, 21, 28];
+      var LINE = 560;                      // 一本线，达到即算冲刺成功
+
+      var ACTS = [
+        { key: 'paper', emoji: '📚', name: '刷两套卷', study: 6, d: { stamina: -14 } },
+        { key: 'recite', emoji: '📖', name: '背单词古文', study: 4, d: { stamina: -7, mood: 2 } },
+        { key: 'notes', emoji: '📝', name: '整理错题本', study: 2, d: { stamina: -6, notes: 1 } },
+        { key: 'teacher', emoji: '👩‍🏫', name: '找老师答疑', study: 9, d: { stamina: -11, mood: 3 } },
+        { key: 'run', emoji: '🏃', name: '操场跑两圈', study: 0, d: { stamina: 22, mood: 6 } },
+        { key: 'sleep', emoji: '😴', name: '早睡一小时', study: 0, d: { stamina: 26, mood: 4 } },
+        { key: 'fun', emoji: '🎮', name: '打一局游戏', study: 0, d: { mood: 18, stamina: 6 } },
+        { key: 'night', emoji: '🍜', name: '和同学吃夜宵', study: 0, d: { mood: 12, stamina: 10 } }
+      ];
+      var EVENTS = [
+        { t: '妈妈炖了排骨汤，硬让你喝完', e: { stamina: 12, mood: 6 } },
+        { t: '半夜失眠，翻来覆去想到三点', e: { stamina: -11, mood: -4 } },
+        { t: '班主任找你谈心：别把自己逼太紧', e: { mood: 12 }, when: function (s) { return s.mood < 48; } },
+        { t: '感冒了，桌角堆起一座纸巾山', e: { stamina: -14, mood: -5 }, when: function (s) { return s.stamina < 45; } },
+        { t: '年级榜上出现了你的名字，名次还往前挪了', e: { mood: 10, score: 3 }, when: function (s) { return s.score > 540; } },
+        { t: '喜欢的同学给你发了两个字：加油', e: { mood: 16 } },
+        { t: '手机被班主任没收，晚自习意外高效', e: { mood: -11, score: 4 } },
+        { t: '书店淘到一本很好用的教辅', e: { score: 7 } },
+        { t: '翻错题本时突然看懂了一整类题', e: { score: 6, mood: 4 }, when: function (s) { return s.notes >= 2; } },
+        { t: '宿舍熄灯后和室友聊了会儿天，心里松快不少', e: { mood: 9, stamina: -3 } }
+      ];
+
+      root.innerHTML =
+        '<div class="hud">' +
+        '<span class="hud-item">第<b data-day>1</b>/30 天</span>' +
+        '<span class="hud-item">高考预估<b data-proj>420</b></span>' +
+        '</div>' +
+        '<div class="ex">' +
+        '<div class="ex-stats">' +
+        '<div class="ex-stat s1"><span>实力分</span><b data-score>420</b><i><u data-bs></u></i></div>' +
+        '<div class="ex-stat s2"><span>体力</span><b data-stam>100</b><i><u data-bt></u></i></div>' +
+        '<div class="ex-stat s3"><span>心态</span><b data-mood>70</b><i><u data-bm></u></i></div>' +
+        '<div class="ex-stat s4"><span>错题本</span><b data-notes>0</b><i><u data-bn></u></i></div>' +
+        '</div>' +
+        '<div class="ex-log" data-log></div>' +
+        '<div class="ex-ask" data-ask></div>' +
+        '<div class="ex-actions" data-acts></div>' +
+        '<p class="tip">体力低于 25 学习效率打四五折，心态低于 30 再打六五折——硬刷不如会休息。</p>' +
+        '</div>';
+
+      var S, examNo, over, actBtns = [];
+      var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), actsEl = $('[data-acts]', root);
+
+      function state() { return { day: 1, score: 420, stamina: 100, mood: 70, notes: 0, lastExam: null }; }
+      function clampStat(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+      function studyMult() {
+        var m = 1;
+        if (S.stamina < 25) m *= 0.45;
+        if (S.mood < 30) m *= 0.65;
+        return m;
+      }
+      function projScore() {
+        return clampStat(Math.round(S.score + (S.stamina - 50) * 0.3 + (S.mood - 50) * 0.5), 300, 750);
+      }
+      function addLog(text, cls) {
+        var line = html('<div class="ex-line ' + (cls || '') + '">' + text + '</div>');
+        logEl.appendChild(line);
+        while (logEl.children.length > 40) logEl.removeChild(logEl.firstChild);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+      function apply(d) {
+        if (d.score) S.score = clampStat(S.score + d.score, 300, 750);
+        if (d.stamina) S.stamina = clampStat(S.stamina + d.stamina, 0, 100);
+        if (d.mood) S.mood = clampStat(S.mood + d.mood, 0, 100);
+        if (d.notes) S.notes = Math.min(9, S.notes + d.notes);
+      }
+      function fmtD(d) {
+        var parts = [];
+        if (d.score) parts.push((d.score > 0 ? '+' : '') + d.score + ' 实力');
+        if (d.stamina) parts.push((d.stamina > 0 ? '+' : '') + d.stamina + ' 体力');
+        if (d.mood) parts.push((d.mood > 0 ? '+' : '') + d.mood + ' 心态');
+        if (d.notes) parts.push('+' + d.notes + ' 错题本');
+        return parts.join(' / ');
+      }
+
+      /* ---------- 行动 ---------- */
+      function doAct(a) {
+        if (over) return;
+        var gain = 0;
+        var tired = S.stamina < 25, down = S.mood < 30;   // 先记下状态（效果应用前）
+        var d = { stamina: a.d.stamina || 0, mood: a.d.mood || 0, notes: a.d.notes || 0 };
+        if (a.study) {
+          gain = Math.round((a.study + S.notes) * studyMult());
+          d.score = gain;
+        }
+        apply(d);
+        sfx(a.study ? 'eat' : 'click');
+        var note = '';
+        if (a.study && tired) note += '（体力告急，效率打折）';
+        if (a.study && down) note += '（心态不佳，效率打折）';
+        addLog('<b>第 ' + S.day + ' 天</b> · ' + a.emoji + ' ' + a.name +
+          (gain ? '，实力 +' + gain : '') + '　' + fmtD(d) + note);
+
+        // 体力崩了
+        if (S.stamina <= 0 && !over) {
+          S.stamina = 45; S.mood = clampStat(S.mood - 12, 0, 100);
+          addLog('🛏️ 你趴在桌上睡着了，被同桌摇醒——身体先扛不住了。（体力回到 45，心态 -12）', 'evt');
+          sfx('hit');
+        }
+
+        if (EXAM_DAYS.indexOf(S.day) >= 0) runExam();
+        else if (Math.random() < 0.36) runEvent();
+
+        S.day++;
+        if (S.day > DAYS) return graduate();
+        paint();
+      }
+      function runEvent() {
+        var pool = EVENTS.filter(function (e) { return !e.when || e.when(S); });
+        if (!pool.length) return;
+        var e = pool[rand(pool.length)];
+        apply(e.e);
+        addLog('· ' + e.t + '　' + fmtD(e.e), 'evt');
+      }
+      function runExam() {
+        examNo++;
+        var proj = projScore();
+        var first = S.lastExam === null;
+        var rank = clampStat(Math.round(46 - (proj - 380) / 7), 1, 46);
+        var trend = first ? 0 : proj - S.lastExam;
+        S.lastExam = proj;
+        var md = first ? 5 : (trend > 0 ? 8 : (trend < 0 ? -10 : 5));
+        S.score = clampStat(S.score + 4, 300, 750);
+        S.mood = clampStat(S.mood + md, 0, 100);
+        var cn = ['一', '二', '三', '四'][examNo - 1] || examNo;
+        var comment = first ? '第一次知道自己站在哪儿（心态 +5）'
+          : trend > 0 ? '比上次进步 ' + trend + ' 分（心态 +8）'
+            : trend < 0 ? '比上次退了 ' + (-trend) + ' 分（心态 -10）'
+              : '和上次持平（心态 +5）';
+        addLog('📊 <b>第' + cn + '次模拟考</b>：' + proj + ' 分，班级第 ' + rank + ' 名　' + comment, 'exam');
+        sfx(trend < 0 ? 'hit' : 'good');
+      }
+
+      /* ---------- 高考与结局 ---------- */
+      var ENDINGS = [
+        { min: 700, win: true, icon: '🏆', name: '清华北大，凡哥来了', text: '查分那天手在抖。班主任连打三个电话，说学校要拉横幅。' },
+        { min: 660, win: true, icon: '🥇', name: '顶尖 985 稳了', text: '你在志愿表第一栏毫不犹豫地填了那所惦记三年的学校。' },
+        { min: 600, win: true, icon: '🎉', name: '985 / 211 到手', text: '分数出来那一刻，你妈在厨房喊了一声，声音都在抖。' },
+        { min: 560, win: true, icon: '✅', name: '一本线以上', text: '不算惊艳，但这 30 天你没有辜负自己。' },
+        { min: 500, win: false, icon: '📗', name: '二本，也还有机会', text: '差一点点。你盯着分数线看了很久，然后把它记在了本子上。' },
+        { min: 0, win: false, icon: '📕', name: '没够线，复读一年', text: '考场出来那天下着雨。你把错题本收好——明年还用得上。' }
+      ];
+      function graduate() {
+        over = true;
+        var luck = Math.round((S.mood - 50) / 8) + (rand(17) - 8);
+        var fin = clampStat(Math.round(S.score + (S.stamina - 50) * 0.3 + (S.mood - 50) * 0.5 + luck), 300, 750);
+        var e = ENDINGS.filter(function (x) { return fin >= x.min; })[0] || ENDINGS[ENDINGS.length - 1];
+        addLog('🎯 <b>高考成绩：' + fin + ' 分</b>　' + e.icon + ' ' + e.name, 'exam');
+        sfx(e.win ? 'win' : 'lose');
+        askEl.textContent = '冲刺结束';
+        actsEl.innerHTML = '';
+        api.submit(fin);
+        api.gameOver({
+          result: e.win ? 'win' : 'lose',
+          title: e.icon + ' ' + e.name,
+          sub: '高考 <b>' + fin + ' 分</b>（一本线 ' + LINE + '）<br>' + e.text +
+               '<br><span style="color:#8a93ab;font-size:12.5px">实力 ' + S.score + ' · 体力 ' + S.stamina +
+               ' · 心态 ' + S.mood + ' · 错题本 ' + S.notes + ' 本</span>',
+          againText: '再冲一次',
+          onRestart: reset
+        });
+      }
+
+      /* ---------- 渲染 ---------- */
+      function paint() {
+        $('[data-day]', root).textContent = Math.min(S.day, DAYS);
+        $('[data-proj]', root).textContent = projScore();
+        $('[data-score]', root).textContent = S.score;
+        $('[data-stam]', root).textContent = S.stamina;
+        $('[data-mood]', root).textContent = S.mood;
+        $('[data-notes]', root).textContent = S.notes;
+        $('[data-bs]', root).style.width = ((S.score - 300) / 450 * 100).toFixed(0) + '%';
+        $('[data-bt]', root).style.width = S.stamina + '%';
+        $('[data-bm]', root).style.width = S.mood + '%';
+        $('[data-bn]', root).style.width = (S.notes / 9 * 100).toFixed(0) + '%';
+        var warn = [];
+        if (S.stamina < 25) warn.push('体力告急');
+        if (S.mood < 30) warn.push('心态偏低');
+        askEl.textContent = '第 ' + S.day + ' 天 · 今天做什么？' + (warn.length ? '（' + warn.join('、') + '）' : '');
+        actBtns.forEach(function (b) {
+          var a = b.__a, g = a.study ? Math.round((a.study + S.notes) * studyMult()) : 0;
+          var txt = a.study ? '+' + g + ' 实力' : '';
+          $('em', b).textContent = (txt ? txt + ' / ' : '') + fmtD({ stamina: a.d.stamina, mood: a.d.mood, notes: a.d.notes });
+          $('em', b).className = a.study ? 'up' : 'down';
+        });
+      }
+      function reset() {
+        S = state(); examNo = 0; over = false;
+        logEl.textContent = '';
+        addLog('📅 距离高考还有 <b>30 天</b>。你叫章哲凡，同学都叫你凡哥。', 'exam');
+        addLog('现在的实力差不多 <b>420 分</b>，二本线上下。接下来每一天怎么过，你自己决定。');
+        paint();
+      }
+
+      ACTS.forEach(function (a) {
+        var b = html('<button class="ex-act"><span class="ex-emoji">' + a.emoji + '</span><b>' + a.name + '</b><em></em></button>');
+        b.__a = a;
+        api.on(b, 'click', function () { doAct(a); });
+        actsEl.appendChild(b);
+        actBtns.push(b);
+      });
+      reset();
+    }
+  };
+
+  var GAMES = [G_SNAKE, G_BREAK, G_2048, G_MEM, G_MINE, G_PONG, G_DODGE, G_IDLE, G_EXAM];
+  var CATS = ['全部', '街机', '益智', '反应', '经营', '剧情'];
 
   /* =========================================================
      启动舞台
