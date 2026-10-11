@@ -292,6 +292,8 @@ canvas{display:block}
 .ex-stat.s2 i u{background:linear-gradient(90deg,#22d3a7,#38bdf8)}
 .ex-stat.s3 i u{background:linear-gradient(90deg,#a855f7,#38bdf8)}
 .ex-stat.s4 i u{background:linear-gradient(90deg,#facc15,#f97316)}
+.ex-stat.danger b{color:#fb7185}
+.ex-stat.danger i u{background:linear-gradient(90deg,#f43f5e,#fb7185)!important}
 /* 六科成绩单 */
 .ex-subs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
   border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.24);padding:11px 12px}
@@ -1925,7 +1927,7 @@ canvas{display:block}
      ========================================================= */
   var G_EXAM = {
     id: 'exam', name: '凡哥的高考冲刺', emoji: '🎓', cat: '剧情', diff: 3,
-    desc: '六门科目、初始 200 分、30 天冲刺。每天随机抽 4 张卡，体力心态决定学习效率。',
+    desc: '六门科目、初始 200 分、30 天冲刺。刷题会消耗心态，心态归零直接崩溃——记得留余地。',
     better: 'high', fmt: function (v) { return v + ' 分'; },
     mount: function (root, api) {
       var DAYS = 30, EXAM_DAYS = [7, 14, 21, 28], LINE = 560;
@@ -1938,40 +1940,40 @@ canvas{display:block}
         { key: 'che', name: '化学', max: 100, start: 25 },
         { key: 'bio', name: '生物', max: 100, start: 30 }
       ];
-      // 学习卡：单科收益 / 体力消耗
+      // 学习卡：单科收益 / 体力消耗 / 心态消耗（收益越高越费心态）
       var STUDY = [
-        { emoji: '📕', name: '背古诗文默写', sub: 'chi', base: 25, sta: -10 },
-        { emoji: '✍️', name: '练一篇作文', sub: 'chi', base: 28, sta: -12 },
-        { emoji: '📖', name: '现代文阅读', sub: 'chi', base: 23, sta: -9 },
-        { emoji: '📐', name: '刷选填压轴', sub: 'mat', base: 26, sta: -12 },
-        { emoji: '🧮', name: '攻克导数大题', sub: 'mat', base: 34, sta: -16 },
-        { emoji: '🔢', name: '错题重做', sub: 'mat', base: 22, sta: -9 },
-        { emoji: '🔤', name: '背单词', sub: 'eng', base: 22, sta: -8 },
-        { emoji: '🎧', name: '练英语听力', sub: 'eng', base: 25, sta: -10 },
-        { emoji: '📰', name: '做英语阅读', sub: 'eng', base: 26, sta: -11 },
-        { emoji: '🧲', name: '力学大题', sub: 'phy', base: 29, sta: -13 },
-        { emoji: '⚡', name: '啃电磁感应', sub: 'phy', base: 33, sta: -15 },
-        { emoji: '⚗️', name: '背化学方程式', sub: 'che', base: 23, sta: -9 },
-        { emoji: '🧪', name: '化学实验题', sub: 'che', base: 29, sta: -13 },
-        { emoji: '🧬', name: '背生物课本', sub: 'bio', base: 22, sta: -8 },
-        { emoji: '🩺', name: '遗传计算题', sub: 'bio', base: 31, sta: -14 }
+        { emoji: '📕', name: '背古诗文默写', sub: 'chi', base: 25, sta: -10, mood: -3 },
+        { emoji: '✍️', name: '练一篇作文', sub: 'chi', base: 28, sta: -12, mood: -4 },
+        { emoji: '📖', name: '现代文阅读', sub: 'chi', base: 23, sta: -9, mood: -3 },
+        { emoji: '📐', name: '刷选填压轴', sub: 'mat', base: 26, sta: -12, mood: -3 },
+        { emoji: '🧮', name: '攻克导数大题', sub: 'mat', base: 34, sta: -16, mood: -4 },
+        { emoji: '🔢', name: '错题重做', sub: 'mat', base: 22, sta: -9, mood: -3 },
+        { emoji: '🔤', name: '背单词', sub: 'eng', base: 22, sta: -8, mood: -3 },
+        { emoji: '🎧', name: '练英语听力', sub: 'eng', base: 25, sta: -10, mood: -3 },
+        { emoji: '📰', name: '做英语阅读', sub: 'eng', base: 26, sta: -11, mood: -3 },
+        { emoji: '🧲', name: '力学大题', sub: 'phy', base: 29, sta: -13, mood: -4 },
+        { emoji: '⚡', name: '啃电磁感应', sub: 'phy', base: 33, sta: -15, mood: -4 },
+        { emoji: '⚗️', name: '背化学方程式', sub: 'che', base: 23, sta: -9, mood: -3 },
+        { emoji: '🧪', name: '化学实验题', sub: 'che', base: 29, sta: -13, mood: -4 },
+        { emoji: '🧬', name: '背生物课本', sub: 'bio', base: 22, sta: -8, mood: -3 },
+        { emoji: '🩺', name: '遗传计算题', sub: 'bio', base: 31, sta: -14, mood: -4 }
       ];
       // 特殊卡
       var SPECIAL = [
-        { emoji: '👩‍🏫', name: '找老师答疑', sub: 'weakest', base: 37, sta: -12, mood: 3 },
-        { emoji: '🧑‍🤝‍🧑', name: '和同学讨论', sub: 'random', base: 28, sta: -8, mood: 6 },
-        { emoji: '📝', name: '整理错题本', sub: 'notes', base: 0, sta: -6 },
-        { emoji: '📋', name: '全科模拟卷', sub: 'all', base: 11, sta: -20 }
+        { emoji: '👩‍🏫', name: '找老师答疑', sub: 'weakest', base: 37, sta: -12, mood: -6 },
+        { emoji: '🧑‍🤝‍🧑', name: '和同学讨论', sub: 'random', base: 28, sta: -8, mood: 5 },
+        { emoji: '📝', name: '整理错题本', sub: 'notes', base: 0, sta: -6, mood: -1 },
+        { emoji: '📋', name: '全科模拟卷', sub: 'all', base: 11, sta: -20, mood: -8 }
       ];
       // 休息卡
       var REST = [
-        { emoji: '😴', name: '早睡一小时', sta: 34, mood: 5 },
-        { emoji: '🏃', name: '操场跑两圈', sta: 30, mood: 7 },
-        { emoji: '🎮', name: '打一局游戏', sta: 10, mood: 18 },
-        { emoji: '🍜', name: '和同学吃夜宵', sta: 16, mood: 12 },
-        { emoji: '🚿', name: '洗个热水澡', sta: 22, mood: 9 },
-        { emoji: '🎧', name: '听歌放空', sta: 14, mood: 14 },
-        { emoji: '🚶', name: '陪爸妈散步', sta: 18, mood: 10 }
+        { emoji: '😴', name: '早睡一小时', sta: 34, mood: 8 },
+        { emoji: '🏃', name: '操场跑两圈', sta: 30, mood: 10 },
+        { emoji: '🎮', name: '打一局游戏', sta: 10, mood: 21 },
+        { emoji: '🍜', name: '和同学吃夜宵', sta: 16, mood: 15 },
+        { emoji: '🚿', name: '洗个热水澡', sta: 22, mood: 12 },
+        { emoji: '🎧', name: '听歌放空', sta: 14, mood: 17 },
+        { emoji: '🚶', name: '陪爸妈散步', sta: 18, mood: 13 }
       ];
       var EVENTS = [
         { t: '妈妈炖了排骨汤，硬让你喝完', e: { sta: 12, mood: 6 } },
@@ -2002,7 +2004,7 @@ canvas{display:block}
         '<div class="ex-log" data-log></div>' +
         '<div class="ex-ask" data-ask></div>' +
         '<div class="ex-cards" data-cards></div>' +
-        '<p class="tip">体力满格时学习效率 100%，见底只剩约 30%；心态同样影响发挥。每天的卡片都是随机抽的。</p>' +
+        '<p class="tip">体力满格时学习效率 100%，见底只剩约 30%。<b>刷题会消耗心态，加分越高的卡越费心态</b>——心态归零就崩溃，这一轮直接结束。每天的卡片都是随机抽的。</p>' +
         '</div>';
 
       var S, examNo, over, lastNames = [];
@@ -2115,14 +2117,36 @@ canvas{display:block}
           addLog('🛏️ 你趴在桌上睡着了，被同桌摇醒——身体先扛不住了。（体力回到 42，心态 -12）', 'evt');
           sfx('hit');
         }
+        if (S.mood <= 0) return breakdown();
+        if (S.mood <= 22) addLog('💭 你最近笑不出来了，看书上的字都在飘。再这样下去会出事的。', 'evt');
         if (EXAM_DAYS.indexOf(S.day) >= 0) runExam();
         else if (Math.random() < 0.36) runEvent();
+        if (S.mood <= 0) return breakdown();
 
         S.day++;
         if (S.day > DAYS) return graduate();
         renderCards(drawCards());
         addLog('—— 第 ' + S.day + ' 天 ——', 'dim');
         paint();
+      }
+      /* 心态归零：直接结束这一轮 */
+      function breakdown() {
+        over = true;
+        sfx('lose');
+        var proj = projScore();
+        addLog('💔 <b>心态崩了</b>——你在晚自习上盯着同一行字看了十分钟，一个字也没读进去。', 'exam');
+        addLog('班主任把你叫到走廊，说：先别学了，回去睡一觉。', 'evt');
+        askEl.textContent = '这一轮到此为止';
+        cardsEl.textContent = '';
+        api.submit(proj);
+        api.gameOver({
+          result: 'lose',
+          title: '💔 心态崩了',
+          sub: '第 <b>' + S.day + '</b> 天，你撑不住了<br>当时实力约 <b>' + proj + ' 分</b><br>' +
+               '<span style="color:#8a93ab;font-size:12.5px">刷题是会消耗心态的，分数不是唯一要盯的东西。</span>',
+          againText: '重新来过',
+          onRestart: reset
+        });
       }
       function runEvent() {
         var pool = EVENTS.filter(function (e) { return !e.when || e.when(S); });
@@ -2206,9 +2230,11 @@ canvas{display:block}
         });
         var warn = [];
         if (S.sta < 30) warn.push('体力偏低');
-        if (S.mood < 35) warn.push('心态偏低');
+        if (S.mood <= 25) warn.push('⚠⚠ 心态濒临崩溃');
+        else if (S.mood < 40) warn.push('心态偏低');
+        $('.ex-stat.s3', root).classList.toggle('danger', S.mood <= 25);
         askEl.textContent = '第 ' + S.day + ' 天 · 今天做什么？（最弱：' + getSub(weakestKey()).name + '）' +
-          (warn.length ? '　⚠ ' + warn.join('、') : '');
+          (warn.length ? '　' + warn.join('、') : '');
         paintCards();
       }
       function addLog(text, cls) {
