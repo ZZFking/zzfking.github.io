@@ -282,8 +282,8 @@ canvas{display:block}
 @media (max-width:680px){.idle-cols{grid-template-columns:1fr}}
 
 /* 高考冲刺（文字选择） */
-.ex{display:flex;flex-direction:column;gap:12px;width:min(660px,100%)}
-.ex-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.ex{display:flex;flex-direction:column;gap:12px;width:min(680px,100%)}
+.ex-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .ex-stat{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:9px 11px}
 .ex-stat span{font-size:11.5px;color:var(--dim)}
 .ex-stat b{display:block;font-size:19px;margin:3px 0 7px;font-variant-numeric:tabular-nums}
@@ -292,29 +292,51 @@ canvas{display:block}
 .ex-stat.s2 i u{background:linear-gradient(90deg,#22d3a7,#38bdf8)}
 .ex-stat.s3 i u{background:linear-gradient(90deg,#a855f7,#38bdf8)}
 .ex-stat.s4 i u{background:linear-gradient(90deg,#facc15,#f97316)}
+/* 六科成绩单 */
+.ex-subs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.24);padding:11px 12px}
+.ex-sub{display:flex;flex-direction:column;gap:4px}
+.ex-sub span{font-size:11.5px;color:var(--dim)}
+.ex-sub b{font-size:15px;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:2px}
+.ex-sub b em{font-style:normal;font-size:10.5px;color:#6d768c;font-weight:500}
+.ex-sub i{display:block;height:4px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
+.ex-sub i u{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--o),#ff4d6d);transition:width .3s}
+.ex-sub[data-k="chi"] i u{background:linear-gradient(90deg,#f87171,#fb923c)}
+.ex-sub[data-k="mat"] i u{background:linear-gradient(90deg,#60a5fa,#38bdf8)}
+.ex-sub[data-k="eng"] i u{background:linear-gradient(90deg,#34d399,#22d3ee)}
+.ex-sub[data-k="phy"] i u{background:linear-gradient(90deg,#a78bfa,#818cf8)}
+.ex-sub[data-k="che"] i u{background:linear-gradient(90deg,#fbbf24,#f97316)}
+.ex-sub[data-k="bio"] i u{background:linear-gradient(90deg,#22d3ee,#2dd4bf)}
+.ex-sub.max b{color:#5eead4}
 .ex-log{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.3);padding:12px 14px;
-  height:186px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+  height:172px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
 .ex-log::-webkit-scrollbar{width:7px}
 .ex-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:99px}
 .ex-line{font-size:13px;line-height:1.65;color:#c3ccdf}
 .ex-line b{color:var(--o)}
 .ex-line.exam{color:#ffdcc2;border-left:3px solid var(--o);background:rgba(255,122,24,.09);border-radius:0 9px 9px 0;padding:8px 11px}
 .ex-line.evt{color:#9fe8d6}
+.ex-line.dim{color:#5f687d;font-size:11.5px;text-align:center;letter-spacing:1px}
 .ex-ask{font-size:13.5px;color:var(--dim);text-align:center}
-.ex-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;grid-auto-rows:1fr}
-.ex-act{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 12px;border-radius:14px;cursor:pointer;
-  border:1px solid var(--line);background:var(--panel);transition:.15s;text-align:left;color:var(--text)}
-.ex-act:hover{border-color:var(--line-2);background:rgba(255,255,255,.085);transform:translateY(-2px)}
-.ex-act:active{transform:none}
-.ex-act .ex-emoji{font-size:19px}
-.ex-act b{font-size:13.5px;font-weight:600}
-.ex-act em{font-style:normal;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
-.ex-act em.up{color:#5eead4}
-.ex-act em.down{color:#a9b4c9}
+/* 每日随机卡 */
+.ex-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ex-card{display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:15px;cursor:pointer;text-align:left;
+  border:1px solid var(--line);background:linear-gradient(150deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  transition:transform .15s,border-color .15s,background .15s;color:var(--text)}
+.ex-card:hover{transform:translateY(-2px);border-color:var(--line-2);background:rgba(255,255,255,.1)}
+.ex-card:active{transform:none}
+.ex-card.study{border-color:rgba(255,122,24,.28)}
+.ex-card.study:hover{border-color:rgba(255,122,24,.55);background:rgba(255,122,24,.12)}
+.ex-card .ex-emoji{font-size:24px;flex:0 0 auto}
+.ex-card .ex-cbody{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ex-card b{font-size:14px;font-weight:600}
+.ex-card em{font-style:normal;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.ex-card.study em{color:#ffd0ad}
 @media (max-width:640px){
-  .ex-stats{grid-template-columns:repeat(2,1fr)}
-  .ex-actions{grid-template-columns:repeat(2,1fr)}
-  .ex-log{height:160px}
+  .ex-stats{grid-template-columns:repeat(3,1fr)}
+  .ex-subs{grid-template-columns:repeat(2,1fr)}
+  .ex-cards{grid-template-columns:1fr}
+  .ex-log{height:150px}
 }
 /* 2048 */
 .g2048{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:min(430px,90vw);aspect-ratio:1;
@@ -1899,174 +1921,264 @@ canvas{display:block}
 
   /* =========================================================
      游戏 9：凡哥的高考冲刺（文字选择 / 养成）
-     30 天，每天一个选择；体力与心态会放大或惩罚学习效率
+     六门科目各自计分（初始 200 分），每天从卡池里随机抽 4 张
      ========================================================= */
   var G_EXAM = {
-    id: 'exam', name: '凡哥的高考冲刺', emoji: '🎓', cat: '剧情', diff: 2,
-    desc: '高考前最后 30 天：刷题、补觉、稳住心态。每天一个选择，第 30 天进考场。',
+    id: 'exam', name: '凡哥的高考冲刺', emoji: '🎓', cat: '剧情', diff: 3,
+    desc: '六门科目、初始 200 分、30 天冲刺。每天随机抽 4 张卡，体力心态决定学习效率。',
     better: 'high', fmt: function (v) { return v + ' 分'; },
     mount: function (root, api) {
-      var DAYS = 30, EXAM_DAYS = [7, 14, 21, 28];
-      var LINE = 560;                      // 一本线，达到即算冲刺成功
+      var DAYS = 30, EXAM_DAYS = [7, 14, 21, 28], LINE = 560;
 
-      var ACTS = [
-        { key: 'paper', emoji: '📚', name: '刷两套卷', study: 6, d: { stamina: -14 } },
-        { key: 'recite', emoji: '📖', name: '背单词古文', study: 4, d: { stamina: -7, mood: 2 } },
-        { key: 'notes', emoji: '📝', name: '整理错题本', study: 2, d: { stamina: -6, notes: 1 } },
-        { key: 'teacher', emoji: '👩‍🏫', name: '找老师答疑', study: 9, d: { stamina: -11, mood: 3 } },
-        { key: 'run', emoji: '🏃', name: '操场跑两圈', study: 0, d: { stamina: 22, mood: 6 } },
-        { key: 'sleep', emoji: '😴', name: '早睡一小时', study: 0, d: { stamina: 26, mood: 4 } },
-        { key: 'fun', emoji: '🎮', name: '打一局游戏', study: 0, d: { mood: 18, stamina: 6 } },
-        { key: 'night', emoji: '🍜', name: '和同学吃夜宵', study: 0, d: { mood: 12, stamina: 10 } }
+      var SUBS = [
+        { key: 'chi', name: '语文', max: 150, start: 40 },
+        { key: 'mat', name: '数学', max: 150, start: 35 },
+        { key: 'eng', name: '英语', max: 150, start: 45 },
+        { key: 'phy', name: '物理', max: 100, start: 25 },
+        { key: 'che', name: '化学', max: 100, start: 25 },
+        { key: 'bio', name: '生物', max: 100, start: 30 }
+      ];
+      // 学习卡：单科收益 / 体力消耗
+      var STUDY = [
+        { emoji: '📕', name: '背古诗文默写', sub: 'chi', base: 25, sta: -10 },
+        { emoji: '✍️', name: '练一篇作文', sub: 'chi', base: 28, sta: -12 },
+        { emoji: '📖', name: '现代文阅读', sub: 'chi', base: 23, sta: -9 },
+        { emoji: '📐', name: '刷选填压轴', sub: 'mat', base: 26, sta: -12 },
+        { emoji: '🧮', name: '攻克导数大题', sub: 'mat', base: 34, sta: -16 },
+        { emoji: '🔢', name: '错题重做', sub: 'mat', base: 22, sta: -9 },
+        { emoji: '🔤', name: '背单词', sub: 'eng', base: 22, sta: -8 },
+        { emoji: '🎧', name: '练英语听力', sub: 'eng', base: 25, sta: -10 },
+        { emoji: '📰', name: '做英语阅读', sub: 'eng', base: 26, sta: -11 },
+        { emoji: '🧲', name: '力学大题', sub: 'phy', base: 29, sta: -13 },
+        { emoji: '⚡', name: '啃电磁感应', sub: 'phy', base: 33, sta: -15 },
+        { emoji: '⚗️', name: '背化学方程式', sub: 'che', base: 23, sta: -9 },
+        { emoji: '🧪', name: '化学实验题', sub: 'che', base: 29, sta: -13 },
+        { emoji: '🧬', name: '背生物课本', sub: 'bio', base: 22, sta: -8 },
+        { emoji: '🩺', name: '遗传计算题', sub: 'bio', base: 31, sta: -14 }
+      ];
+      // 特殊卡
+      var SPECIAL = [
+        { emoji: '👩‍🏫', name: '找老师答疑', sub: 'weakest', base: 37, sta: -12, mood: 3 },
+        { emoji: '🧑‍🤝‍🧑', name: '和同学讨论', sub: 'random', base: 28, sta: -8, mood: 6 },
+        { emoji: '📝', name: '整理错题本', sub: 'notes', base: 0, sta: -6 },
+        { emoji: '📋', name: '全科模拟卷', sub: 'all', base: 11, sta: -20 }
+      ];
+      // 休息卡
+      var REST = [
+        { emoji: '😴', name: '早睡一小时', sta: 34, mood: 5 },
+        { emoji: '🏃', name: '操场跑两圈', sta: 30, mood: 7 },
+        { emoji: '🎮', name: '打一局游戏', sta: 10, mood: 18 },
+        { emoji: '🍜', name: '和同学吃夜宵', sta: 16, mood: 12 },
+        { emoji: '🚿', name: '洗个热水澡', sta: 22, mood: 9 },
+        { emoji: '🎧', name: '听歌放空', sta: 14, mood: 14 },
+        { emoji: '🚶', name: '陪爸妈散步', sta: 18, mood: 10 }
       ];
       var EVENTS = [
-        { t: '妈妈炖了排骨汤，硬让你喝完', e: { stamina: 12, mood: 6 } },
-        { t: '半夜失眠，翻来覆去想到三点', e: { stamina: -11, mood: -4 } },
+        { t: '妈妈炖了排骨汤，硬让你喝完', e: { sta: 12, mood: 6 } },
+        { t: '半夜失眠，翻来覆去想到三点', e: { sta: -11, mood: -4 } },
         { t: '班主任找你谈心：别把自己逼太紧', e: { mood: 12 }, when: function (s) { return s.mood < 48; } },
-        { t: '感冒了，桌角堆起一座纸巾山', e: { stamina: -14, mood: -5 }, when: function (s) { return s.stamina < 45; } },
-        { t: '年级榜上出现了你的名字，名次还往前挪了', e: { mood: 10, score: 3 }, when: function (s) { return s.score > 540; } },
+        { t: '感冒了，桌角堆起一座纸巾山', e: { sta: -14, mood: -5 }, when: function (s) { return s.sta < 45; } },
+        { t: '年级榜上出现了你的名字，名次还往前挪了', e: { mood: 10, all: 1 }, when: function (s) { return totalOf(s) > 480; } },
         { t: '喜欢的同学给你发了两个字：加油', e: { mood: 16 } },
-        { t: '手机被班主任没收，晚自习意外高效', e: { mood: -11, score: 4 } },
-        { t: '书店淘到一本很好用的教辅', e: { score: 7 } },
-        { t: '翻错题本时突然看懂了一整类题', e: { score: 6, mood: 4 }, when: function (s) { return s.notes >= 2; } },
-        { t: '宿舍熄灯后和室友聊了会儿天，心里松快不少', e: { mood: 9, stamina: -3 } }
+        { t: '手机被班主任没收，晚自习意外高效', e: { mood: -11, all: 2 } },
+        { t: '书店淘到一本很好用的教辅，六科都翻了翻', e: { all: 3 } },
+        { t: '翻错题本时突然看懂了一整类题', e: { all: 2, mood: 4 }, when: function (s) { return s.notes >= 2; } },
+        { t: '宿舍熄灯后和室友聊了会儿天，心里松快不少', e: { mood: 9, sta: -3 } }
       ];
 
       root.innerHTML =
         '<div class="hud">' +
         '<span class="hud-item">第<b data-day>1</b>/30 天</span>' +
-        '<span class="hud-item">高考预估<b data-proj>420</b></span>' +
+        '<span class="hud-item">总分<b data-total>200</b></span>' +
+        '<span class="hud-item">高考预估<b data-proj>245</b></span>' +
         '</div>' +
         '<div class="ex">' +
         '<div class="ex-stats">' +
-        '<div class="ex-stat s1"><span>实力分</span><b data-score>420</b><i><u data-bs></u></i></div>' +
-        '<div class="ex-stat s2"><span>体力</span><b data-stam>100</b><i><u data-bt></u></i></div>' +
+        '<div class="ex-stat s2"><span>体力</span><b data-sta>100</b><i><u data-bt></u></i></div>' +
         '<div class="ex-stat s3"><span>心态</span><b data-mood>70</b><i><u data-bm></u></i></div>' +
         '<div class="ex-stat s4"><span>错题本</span><b data-notes>0</b><i><u data-bn></u></i></div>' +
         '</div>' +
+        '<div class="ex-subs" data-subs></div>' +
         '<div class="ex-log" data-log></div>' +
         '<div class="ex-ask" data-ask></div>' +
-        '<div class="ex-actions" data-acts></div>' +
-        '<p class="tip">体力低于 25 学习效率打四五折，心态低于 30 再打六五折——硬刷不如会休息。</p>' +
+        '<div class="ex-cards" data-cards></div>' +
+        '<p class="tip">体力满格时学习效率 100%，见底只剩约 30%；心态同样影响发挥。每天的卡片都是随机抽的。</p>' +
         '</div>';
 
-      var S, examNo, over, actBtns = [];
-      var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), actsEl = $('[data-acts]', root);
+      var S, examNo, over, lastNames = [];
+      var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
+      var subsEl = $('[data-subs]', root);
 
-      function state() { return { day: 1, score: 420, stamina: 100, mood: 70, notes: 0, lastExam: null }; }
+      function getSub(k) { for (var i = 0; i < SUBS.length; i++) if (SUBS[i].key === k) return SUBS[i]; return SUBS[0]; }
+      function totalOf(s) { var t = 0; SUBS.forEach(function (x) { t += s.sub[x.key]; }); return t; }
       function clampStat(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-      function studyMult() {
-        var m = 1;
-        if (S.stamina < 25) m *= 0.45;
-        if (S.mood < 30) m *= 0.65;
-        return m;
+      function studyMult() { return (0.30 + 0.70 * S.sta / 100) * (0.70 + 0.30 * S.mood / 100); }
+      function weakestKey() {
+        var best = SUBS[0], r = S.sub[best.key] / best.max;
+        SUBS.forEach(function (s) { var q = S.sub[s.key] / s.max; if (q < r) { r = q; best = s; } });
+        return best.key;
       }
-      function projScore() {
-        return clampStat(Math.round(S.score + (S.stamina - 50) * 0.3 + (S.mood - 50) * 0.5), 300, 750);
+      function calcGain(base, key) {
+        var s = getSub(key), dim = 1 - 0.45 * (S.sub[key] / s.max);
+        return Math.max(1, Math.round((base + S.notes) * dim * studyMult()));
       }
-      function addLog(text, cls) {
-        var line = html('<div class="ex-line ' + (cls || '') + '">' + text + '</div>');
-        logEl.appendChild(line);
-        while (logEl.children.length > 40) logEl.removeChild(logEl.firstChild);
-        logEl.scrollTop = logEl.scrollHeight;
+      function projScore() { return clampStat(Math.round(totalOf(S) + (S.sta - 50) * 0.3 + (S.mood - 50) * 0.5), 200, 750); }
+
+      /* ---------- 每天抽卡 ---------- */
+      function shuffle(a) {
+        a = a.slice();
+        for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; }
+        return a;
       }
-      function apply(d) {
-        if (d.score) S.score = clampStat(S.score + d.score, 300, 750);
-        if (d.stamina) S.stamina = clampStat(S.stamina + d.stamina, 0, 100);
-        if (d.mood) S.mood = clampStat(S.mood + d.mood, 0, 100);
-        if (d.notes) S.notes = Math.min(9, S.notes + d.notes);
+      function buildCards() {
+        var out = [], keys = shuffle(SUBS.map(function (s) { return s.key; }));
+        var n = 2 + rand(2);                        // 2~3 张学习卡，科目不重复
+        for (var i = 0; i < n; i++) {
+          var k = keys[i % keys.length];
+          var pool = STUDY.filter(function (c) { return c.sub === k; });
+          out.push(pool[rand(pool.length)]);
+        }
+        if (Math.random() < 0.30) out.push(SPECIAL[rand(SPECIAL.length)]);
+        while (out.length < 4) {
+          var r = REST[rand(REST.length)];
+          if (out.indexOf(r) < 0) out.push(r);
+        }
+        return shuffle(out).slice(0, 4);
       }
-      function fmtD(d) {
+      function drawCards() {
+        // 和昨天至少换掉三张，保证「每天都不一样」
+        for (var t = 0; t < 14; t++) {
+          var cards = buildCards();
+          var same = cards.filter(function (c) { return lastNames.indexOf(c.name) >= 0; }).length;
+          if (same <= 1) { lastNames = cards.map(function (c) { return c.name; }); return cards; }
+        }
+        var fallback = buildCards();
+        lastNames = fallback.map(function (c) { return c.name; });
+        return fallback;
+      }
+      function renderCards(cards) {
+        cardsEl.textContent = '';
+        cards.forEach(function (c) {
+          var b = html('<button class="ex-card"><span class="ex-emoji">' + c.emoji + '</span>' +
+            '<span class="ex-cbody"><b>' + c.name + '</b><em></em></span></button>');
+          b.__c = c;
+          cardsEl.appendChild(b);
+        });
+        paintCards();
+      }
+      function cardPreview(c) {
         var parts = [];
-        if (d.score) parts.push((d.score > 0 ? '+' : '') + d.score + ' 实力');
-        if (d.stamina) parts.push((d.stamina > 0 ? '+' : '') + d.stamina + ' 体力');
-        if (d.mood) parts.push((d.mood > 0 ? '+' : '') + d.mood + ' 心态');
-        if (d.notes) parts.push('+' + d.notes + ' 错题本');
+        if (c.sub === 'notes') parts.push('错题本 +1');
+        else if (c.sub === 'all') parts.push('六科各 +' + calcGain(c.base, 'chi') + ' 左右');
+        else if (c.sub === 'weakest') { var wk = weakestKey(); parts.push(getSub(wk).name + ' +' + calcGain(c.base, wk)); }
+        else if (c.sub === 'random') parts.push('随机一科 +' + calcGain(c.base, 'chi') + ' 左右');
+        else if (c.sub) parts.push(getSub(c.sub).name + ' +' + calcGain(c.base, c.sub));
+        if (c.sta) parts.push('体力 ' + (c.sta > 0 ? '+' : '') + c.sta);
+        if (c.mood) parts.push('心态 ' + (c.mood > 0 ? '+' : '') + c.mood);
         return parts.join(' / ');
+      }
+      function paintCards() {
+        $$('.ex-card', cardsEl).forEach(function (b) {
+          $('em', b).textContent = cardPreview(b.__c);
+          b.classList.toggle('study', !!b.__c.sub && b.__c.sub !== 'notes');
+        });
       }
 
       /* ---------- 行动 ---------- */
-      function doAct(a) {
+      function doCard(c) {
         if (over) return;
-        var gain = 0;
-        var tired = S.stamina < 25, down = S.mood < 30;   // 先记下状态（效果应用前）
-        var d = { stamina: a.d.stamina || 0, mood: a.d.mood || 0, notes: a.d.notes || 0 };
-        if (a.study) {
-          gain = Math.round((a.study + S.notes) * studyMult());
-          d.score = gain;
+        var d = [], gain = 0;
+        if (c.sub === 'notes') {
+          S.notes = Math.min(9, S.notes + 1);
+          d.push('错题本 +1');
+        } else if (c.sub === 'all') {
+          SUBS.forEach(function (s) {
+            var g = calcGain(c.base, s.key);
+            S.sub[s.key] = Math.min(s.max, S.sub[s.key] + g);
+            gain += g;
+          });
+          d.push('六科共 +' + gain);
+        } else if (c.sub) {
+          var key = c.sub === 'weakest' ? weakestKey() : (c.sub === 'random' ? SUBS[rand(SUBS.length)].key : c.sub);
+          var g2 = calcGain(c.base, key);
+          S.sub[key] = Math.min(getSub(key).max, S.sub[key] + g2);
+          gain = g2;
+          d.push(getSub(key).name + ' +' + g2);
         }
-        apply(d);
-        sfx(a.study ? 'eat' : 'click');
-        var note = '';
-        if (a.study && tired) note += '（体力告急，效率打折）';
-        if (a.study && down) note += '（心态不佳，效率打折）';
-        addLog('<b>第 ' + S.day + ' 天</b> · ' + a.emoji + ' ' + a.name +
-          (gain ? '，实力 +' + gain : '') + '　' + fmtD(d) + note);
+        if (c.sta) { S.sta = clampStat(S.sta + c.sta, 0, 100); d.push('体力 ' + (c.sta > 0 ? '+' : '') + c.sta); }
+        if (c.mood) { S.mood = clampStat(S.mood + c.mood, 0, 100); d.push('心态 ' + (c.mood > 0 ? '+' : '') + c.mood); }
+        sfx(gain > 0 ? 'eat' : 'click');
+        addLog('<b>第 ' + S.day + ' 天</b> · ' + c.emoji + ' ' + c.name + '：' + d.join('　'));
 
-        // 体力崩了
-        if (S.stamina <= 0 && !over) {
-          S.stamina = 45; S.mood = clampStat(S.mood - 12, 0, 100);
-          addLog('🛏️ 你趴在桌上睡着了，被同桌摇醒——身体先扛不住了。（体力回到 45，心态 -12）', 'evt');
+        if (S.sta <= 0) {
+          S.sta = 42; S.mood = clampStat(S.mood - 12, 0, 100);
+          addLog('🛏️ 你趴在桌上睡着了，被同桌摇醒——身体先扛不住了。（体力回到 42，心态 -12）', 'evt');
           sfx('hit');
         }
-
         if (EXAM_DAYS.indexOf(S.day) >= 0) runExam();
         else if (Math.random() < 0.36) runEvent();
 
         S.day++;
         if (S.day > DAYS) return graduate();
+        renderCards(drawCards());
+        addLog('—— 第 ' + S.day + ' 天 ——', 'dim');
         paint();
       }
       function runEvent() {
         var pool = EVENTS.filter(function (e) { return !e.when || e.when(S); });
         if (!pool.length) return;
-        var e = pool[rand(pool.length)];
-        apply(e.e);
-        addLog('· ' + e.t + '　' + fmtD(e.e), 'evt');
+        var e = pool[rand(pool.length)], d = [];
+        if (e.e.sta) { S.sta = clampStat(S.sta + e.e.sta, 0, 100); d.push('体力 ' + (e.e.sta > 0 ? '+' : '') + e.e.sta); }
+        if (e.e.mood) { S.mood = clampStat(S.mood + e.e.mood, 0, 100); d.push('心态 ' + (e.e.mood > 0 ? '+' : '') + e.e.mood); }
+        if (e.e.all) {
+          SUBS.forEach(function (s) { S.sub[s.key] = Math.min(s.max, S.sub[s.key] + e.e.all); });
+          d.push('六科各 +' + e.e.all);
+        }
+        addLog('· ' + e.t + (d.length ? '　' + d.join('　') : ''), 'evt');
       }
       function runExam() {
         examNo++;
         var proj = projScore();
         var first = S.lastExam === null;
-        var rank = clampStat(Math.round(46 - (proj - 380) / 7), 1, 46);
+        var rank = clampStat(Math.round(46 - (proj - 200) / 12), 1, 46);
         var trend = first ? 0 : proj - S.lastExam;
         S.lastExam = proj;
-        var md = first ? 5 : (trend > 0 ? 8 : (trend < 0 ? -10 : 5));
-        S.score = clampStat(S.score + 4, 300, 750);
-        S.mood = clampStat(S.mood + md, 0, 100);
+        SUBS.forEach(function (s) { S.sub[s.key] = Math.min(s.max, S.sub[s.key] + 2); });
+        S.mood = clampStat(S.mood + (first ? 5 : trend > 0 ? 8 : trend < 0 ? -10 : 5), 0, 100);
         var cn = ['一', '二', '三', '四'][examNo - 1] || examNo;
-        var comment = first ? '第一次知道自己站在哪儿（心态 +5）'
-          : trend > 0 ? '比上次进步 ' + trend + ' 分（心态 +8）'
-            : trend < 0 ? '比上次退了 ' + (-trend) + ' 分（心态 -10）'
-              : '和上次持平（心态 +5）';
-        addLog('📊 <b>第' + cn + '次模拟考</b>：' + proj + ' 分，班级第 ' + rank + ' 名　' + comment, 'exam');
+        addLog('📊 <b>第' + cn + '次模拟考</b>：' + proj + ' 分，班级第 ' + rank + ' 名　' +
+          (first ? '第一次知道自己站在哪儿（六科各 +2，心态 +5）'
+            : trend > 0 ? '比上次进步 ' + trend + ' 分（六科各 +2，心态 +8）'
+              : trend < 0 ? '比上次退了 ' + (-trend) + ' 分（六科各 +2，心态 -10）'
+                : '和上次持平（六科各 +2，心态 +5）'), 'exam');
         sfx(trend < 0 ? 'hit' : 'good');
       }
 
       /* ---------- 高考与结局 ---------- */
       var ENDINGS = [
         { min: 700, win: true, icon: '🏆', name: '清华北大，凡哥来了', text: '查分那天手在抖。班主任连打三个电话，说学校要拉横幅。' },
-        { min: 660, win: true, icon: '🥇', name: '顶尖 985 稳了', text: '你在志愿表第一栏毫不犹豫地填了那所惦记三年的学校。' },
-        { min: 600, win: true, icon: '🎉', name: '985 / 211 到手', text: '分数出来那一刻，你妈在厨房喊了一声，声音都在抖。' },
+        { min: 650, win: true, icon: '🥇', name: '顶尖 985 稳了', text: '你在志愿表第一栏毫不犹豫地填了那所惦记三年的学校。' },
+        { min: 590, win: true, icon: '🎉', name: '985 / 211 到手', text: '分数出来那一刻，你妈在厨房喊了一声，声音都在抖。' },
         { min: 560, win: true, icon: '✅', name: '一本线以上', text: '不算惊艳，但这 30 天你没有辜负自己。' },
-        { min: 500, win: false, icon: '📗', name: '二本，也还有机会', text: '差一点点。你盯着分数线看了很久，然后把它记在了本子上。' },
+        { min: 480, win: false, icon: '📗', name: '二本，也还有机会', text: '差一点点。你盯着分数线看了很久，然后把它记在了本子上。' },
         { min: 0, win: false, icon: '📕', name: '没够线，复读一年', text: '考场出来那天下着雨。你把错题本收好——明年还用得上。' }
       ];
       function graduate() {
         over = true;
         var luck = Math.round((S.mood - 50) / 8) + (rand(17) - 8);
-        var fin = clampStat(Math.round(S.score + (S.stamina - 50) * 0.3 + (S.mood - 50) * 0.5 + luck), 300, 750);
+        var fin = clampStat(Math.round(totalOf(S) + (S.sta - 50) * 0.3 + (S.mood - 50) * 0.5 + luck), 200, 750);
         var e = ENDINGS.filter(function (x) { return fin >= x.min; })[0] || ENDINGS[ENDINGS.length - 1];
         addLog('🎯 <b>高考成绩：' + fin + ' 分</b>　' + e.icon + ' ' + e.name, 'exam');
         sfx(e.win ? 'win' : 'lose');
         askEl.textContent = '冲刺结束';
-        actsEl.innerHTML = '';
+        cardsEl.textContent = '';
+        var detail = SUBS.map(function (s) { return s.name + ' ' + S.sub[s.key]; }).join(' · ');
         api.submit(fin);
         api.gameOver({
           result: e.win ? 'win' : 'lose',
           title: e.icon + ' ' + e.name,
           sub: '高考 <b>' + fin + ' 分</b>（一本线 ' + LINE + '）<br>' + e.text +
-               '<br><span style="color:#8a93ab;font-size:12.5px">实力 ' + S.score + ' · 体力 ' + S.stamina +
+               '<br><span style="color:#8a93ab;font-size:12.5px">' + detail + '　体力 ' + S.sta +
                ' · 心态 ' + S.mood + ' · 错题本 ' + S.notes + ' 本</span>',
           againText: '再冲一次',
           onRestart: reset
@@ -2076,40 +2188,56 @@ canvas{display:block}
       /* ---------- 渲染 ---------- */
       function paint() {
         $('[data-day]', root).textContent = Math.min(S.day, DAYS);
+        $('[data-total]', root).textContent = totalOf(S);
         $('[data-proj]', root).textContent = projScore();
-        $('[data-score]', root).textContent = S.score;
-        $('[data-stam]', root).textContent = S.stamina;
+        $('[data-sta]', root).textContent = S.sta;
         $('[data-mood]', root).textContent = S.mood;
         $('[data-notes]', root).textContent = S.notes;
-        $('[data-bs]', root).style.width = ((S.score - 300) / 450 * 100).toFixed(0) + '%';
-        $('[data-bt]', root).style.width = S.stamina + '%';
+        $('[data-bt]', root).style.width = S.sta + '%';
         $('[data-bm]', root).style.width = S.mood + '%';
         $('[data-bn]', root).style.width = (S.notes / 9 * 100).toFixed(0) + '%';
-        var warn = [];
-        if (S.stamina < 25) warn.push('体力告急');
-        if (S.mood < 30) warn.push('心态偏低');
-        askEl.textContent = '第 ' + S.day + ' 天 · 今天做什么？' + (warn.length ? '（' + warn.join('、') + '）' : '');
-        actBtns.forEach(function (b) {
-          var a = b.__a, g = a.study ? Math.round((a.study + S.notes) * studyMult()) : 0;
-          var txt = a.study ? '+' + g + ' 实力' : '';
-          $('em', b).textContent = (txt ? txt + ' / ' : '') + fmtD({ stamina: a.d.stamina, mood: a.d.mood, notes: a.d.notes });
-          $('em', b).className = a.study ? 'up' : 'down';
+        SUBS.forEach(function (s) {
+          var row = $('[data-sub="' + s.key + '"]', subsEl);
+          if (!row) return;
+          var v = S.sub[s.key];
+          $('b', row).innerHTML = v + '<em>/' + s.max + '</em>';
+          $('u', row).style.width = (v / s.max * 100).toFixed(0) + '%';
+          row.classList.toggle('max', v >= s.max);
         });
+        var warn = [];
+        if (S.sta < 30) warn.push('体力偏低');
+        if (S.mood < 35) warn.push('心态偏低');
+        askEl.textContent = '第 ' + S.day + ' 天 · 今天做什么？（最弱：' + getSub(weakestKey()).name + '）' +
+          (warn.length ? '　⚠ ' + warn.join('、') : '');
+        paintCards();
+      }
+      function addLog(text, cls) {
+        var line = html('<div class="ex-line ' + (cls || '') + '">' + text + '</div>');
+        logEl.appendChild(line);
+        while (logEl.children.length > 60) logEl.removeChild(logEl.firstChild);
+        logEl.scrollTop = logEl.scrollHeight;
       }
       function reset() {
-        S = state(); examNo = 0; over = false;
+        var sub = {};
+        SUBS.forEach(function (s) { sub[s.key] = s.start; });
+        S = { day: 1, sub: sub, sta: 100, mood: 70, notes: 0, lastExam: null };
+        examNo = 0; over = false; lastNames = [];
         logEl.textContent = '';
+        subsEl.textContent = '';
+        SUBS.forEach(function (s) {
+          subsEl.appendChild(html('<div class="ex-sub" data-sub="' + s.key + '" data-k="' + s.key + '">' +
+            '<span>' + s.name + '</span><b>0<em>/' + s.max + '</em></b><i><u></u></i></div>'));
+        });
         addLog('📅 距离高考还有 <b>30 天</b>。你叫章哲凡，同学都叫你凡哥。', 'exam');
-        addLog('现在的实力差不多 <b>420 分</b>，二本线上下。接下来每一天怎么过，你自己决定。');
+        addLog('六科加起来现在只有 <b>200 分</b>。每天能做什么是随机的，怎么选看你自己。');
+        renderCards(drawCards());
         paint();
       }
 
-      ACTS.forEach(function (a) {
-        var b = html('<button class="ex-act"><span class="ex-emoji">' + a.emoji + '</span><b>' + a.name + '</b><em></em></button>');
-        b.__a = a;
-        api.on(b, 'click', function () { doAct(a); });
-        actsEl.appendChild(b);
-        actBtns.push(b);
+      // 卡片用事件委托，避免每天重建监听
+      api.on(cardsEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.ex-card') : null;
+        if (b && b.__c) doCard(b.__c);
       });
       reset();
     }
