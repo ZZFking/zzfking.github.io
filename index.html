@@ -1686,10 +1686,8 @@ canvas{display:block}
   function money(n) {
     n = Math.max(0, n || 0);
     if (n < 10000) return '¥' + Math.floor(n).toLocaleString('en-US');
-    if (n < 100000000) {
-      var w = n / 10000;
-      return '¥' + (w >= 1000 ? w.toFixed(0) : w.toFixed(2)) + '万';
-    }
+    if (n < 1000000) return '¥' + (n / 10000).toFixed(1) + '万';
+    if (n < 100000000) return '¥' + Math.round(n / 10000) + '万';
     return '¥' + (n / 100000000).toFixed(2) + '亿';
   }
   function rateFmt(n) {
@@ -1706,18 +1704,21 @@ canvas{display:block}
   }
 
   var G_IDLE = {
-    id: 'idle', name: '凡哥的奶茶帝国', emoji: '🧋', cat: '经营', diff: 1,
-    desc: '从校门口一个小摊做起，买产业、开连锁。关掉页面也在帮你赚，回来一次结清。',
+    id: 'idle', name: '凡哥的奶茶帝国', emoji: '🧋', cat: '经营', diff: 2,
+    desc: '从小摊做到上市集团，八档产业、九项升级。关掉页面也在帮你赚，回来一次结清。',
     better: 'high', fmt: money,
     mount: function (root, api) {
-      var KEY = 'fange-idle-v1', GOAL = 1000000, OFFLINE_CAP = 8 * 3600, GROWTH = 1.10;
+      var KEY = 'fange-idle-v1', GOAL = 100000000, OFFLINE_CAP = 8 * 3600, GROWTH = 1.10;
+      // 每档回本时间都约 12 秒，一路爬到凡哥集团大约 9~10 分钟
       var SHOPS = [
-        { key: 'stall', name: '校门口小摊', emoji: '🍢', cost: 10, income: 1.2, free: 1 },
-        { key: 'store', name: '便利店', emoji: '🏪', cost: 150, income: 20, free: 0 },
-        { key: 'tea', name: '奶茶店', emoji: '🧋', cost: 2000, income: 300, free: 0 },
-        { key: 'chain', name: '连锁分店', emoji: '🏬', cost: 28000, income: 5000, free: 0 },
-        { key: 'plant', name: '中央厨房', emoji: '🏭', cost: 120000, income: 26000, free: 0 },
-        { key: 'group', name: '凡哥集团', emoji: '🏛️', cost: 1500000, income: 380000, free: 0 }
+        { key: 'stall', name: '校门口小摊', emoji: '🍢', cost: 10, income: 0.8, free: 1 },
+        { key: 'store', name: '便利店', emoji: '🏪', cost: 80, income: 6.5, free: 0 },
+        { key: 'tea', name: '奶茶店', emoji: '🧋', cost: 650, income: 54, free: 0 },
+        { key: 'chain', name: '连锁分店', emoji: '🏬', cost: 5200, income: 430, free: 0 },
+        { key: 'plant', name: '中央厨房', emoji: '🏭', cost: 42000, income: 3500, free: 0 },
+        { key: 'cold', name: '冷链物流', emoji: '🚚', cost: 340000, income: 28000, free: 0 },
+        { key: 'franchise', name: '全国加盟', emoji: '🤝', cost: 2700000, income: 225000, free: 0 },
+        { key: 'group', name: '凡哥集团', emoji: '🏛️', cost: 22000000, income: 1800000, free: 0 }
       ];
       var UPS = [
         { key: 'net', name: '网红打卡', desc: '点击收益 ×5', cost: 400, type: 'click', mult: 5 },
@@ -1725,7 +1726,10 @@ canvas{display:block}
         { key: 'night', name: '夜班店员', desc: '离线收益 50% → 100%', cost: 15000, type: 'offline' },
         { key: 'sign', name: '签名照', desc: '点击收益 ×10', cost: 25000, type: 'click', mult: 10 },
         { key: 'agent', name: '校园代理', desc: '全部产业收益 ×2.5', cost: 40000, type: 'global', mult: 2.5 },
-        { key: 'ip', name: '凡哥联名 IP', desc: '全部产业收益 ×4', cost: 300000, type: 'global', mult: 4 }
+        { key: 'ip', name: '凡哥联名 IP', desc: '全部产业收益 ×4', cost: 300000, type: 'global', mult: 4 },
+        { key: 'douyin', name: '抖音爆火', desc: '全部产业收益 ×5', cost: 2500000, type: 'global', mult: 5 },
+        { key: 'join', name: '开放加盟', desc: '全部产业收益 ×6', cost: 20000000, type: 'global', mult: 6 },
+        { key: 'ipo', name: '上市敲钟', desc: '全部产业收益 ×8', cost: 200000000, type: 'global', mult: 8 }
       ];
 
       /* ---------- 存档 ---------- */
@@ -1789,7 +1793,7 @@ canvas{display:block}
         '<div class="idle-panel"><h4>产业（点一下买下）</h4><div data-shops></div></div>' +
         '<div class="idle-panel"><h4>升级（一次性）</h4><div data-ups></div></div>' +
         '</div>' +
-        '<p class="tip">关掉这个游戏、甚至关掉网页，店员都在帮你赚；回来按离线时长一次性结算，最多算 8 小时。</p>' +
+        '<p class="tip">八档产业一路爬到上市集团，目标累计 ¥1亿（约 10 分钟）。关掉这个游戏、甚至关掉网页，店员都在帮你赚；回来按离线时长一次性结算，最多算 8 小时。</p>' +
         '</div>' +
         '<div class="idle-floats"></div>';
 
@@ -1877,7 +1881,7 @@ canvas{display:block}
         barEl.style.width = (pct * 100).toFixed(1) + '%';
         goalEl.textContent = S.won
           ? '✅ 已成为校园传说 · 累计 ' + money(S.total) + '（还能继续做大）'
-          : '目标：累计收入 ¥100万（' + Math.floor(pct * 100) + '%）';
+          : '目标：累计收入 ' + money(GOAL) + '（' + Math.floor(pct * 100) + '%）';
         shopRows.forEach(function (row) {
           var sh = row.__sh, c = costOf(sh);
           $('.idle-info b i', row).textContent = '×' + owned(sh);
@@ -1909,7 +1913,7 @@ canvas{display:block}
             result: 'win',
             title: '🏆 凡哥成了',
             sub: '累计赚到 <b>' + money(S.total) + '</b><br>用时 ' + durFmt(S.seconds) + ' · 开了 ' + shopCount() + ' 家店' +
-                 '<br>还有更大的产业可以继续解锁',
+                 '<br>从校门口小摊到上市集团，你全走完了',
             againText: '继续经营',
             onRestart: function () { paint(); }
           });
