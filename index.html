@@ -275,6 +275,19 @@ canvas{display:block}
   font-size:13px;line-height:1.7;color:#bff5e6}
 .idle-offline b{color:#fff}
 .idle-floats{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+/* 重新开始 */
+.idle-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.idle-foot span{font-size:12px;color:#6d768c;font-variant-numeric:tabular-nums}
+.idle-confirm{position:fixed;inset:0;z-index:30;display:grid;place-items:center;
+  background:rgba(4,5,12,.72);backdrop-filter:blur(6px);animation:fade .2s;padding:20px}
+.idle-confirm-card{width:min(400px,92vw);text-align:center;border:1px solid var(--line-2);border-radius:20px;
+  padding:26px 22px;background:linear-gradient(170deg,rgba(28,20,40,.97),rgba(10,11,20,.99));
+  box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.idle-confirm-card h3{font-size:20px;margin-bottom:12px}
+.idle-confirm-card p{color:#c3ccdf;font-size:13.5px;line-height:1.9}
+.idle-confirm-card p b{color:var(--o)}
+.idle-confirm-card p span{display:inline-block;margin-top:8px;color:#6d768c;font-size:12.5px}
+.idle-confirm-actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
 .idle-float{position:absolute;transform:translate(-50%,-50%);font-weight:800;font-size:15px;color:#ffd9c0;
   text-shadow:0 2px 10px rgba(0,0,0,.65);animation:idleFloat .75s ease-out forwards;white-space:nowrap}
 .idle-float.good{color:#5eead4}
@@ -1794,6 +1807,8 @@ canvas{display:block}
         '<div class="idle-panel"><h4>升级（一次性）</h4><div data-ups></div></div>' +
         '</div>' +
         '<p class="tip">八档产业一路爬到上市集团，目标累计 ¥1亿（约 10 分钟）。关掉这个游戏、甚至关掉网页，店员都在帮你赚；回来按离线时长一次性结算，最多算 8 小时。</p>' +
+        '<div class="idle-foot"><span data-played></span>' +
+        '<button class="btn sm ghost" data-reset>⟳ 重新开始</button></div>' +
         '</div>' +
         '<div class="idle-floats"></div>';
 
@@ -1802,29 +1817,39 @@ canvas{display:block}
       var floatsEl = $('.idle-floats', root), shopsEl = $('[data-shops]', root), upsEl = $('[data-ups]', root);
 
       var shopRows = [], upRows = [];
-      SHOPS.forEach(function (sh) {
-        var row = html('<button class="idle-row" type="button">' +
-          '<span class="idle-emoji">' + sh.emoji + '</span>' +
-          '<span class="idle-info"><b>' + sh.name + ' <i>×0</i></b><em>+' + rateFmt(sh.income) + '/秒</em></span>' +
-          '<span class="idle-buy"><b>¥0</b><em>买下</em></span></button>');
-        row.__sh = sh;
-        api.on(row, 'click', function () { buyShop(sh, row); });
-        shopsEl.appendChild(row);
-        shopRows.push(row);
-      });
-      UPS.forEach(function (u) {
-        var row = html('<button class="idle-row" type="button">' +
-          '<span class="idle-emoji">🎁</span>' +
-          '<span class="idle-info"><b>' + u.name + '</b><em>' + u.desc + '</em></span>' +
-          '<span class="idle-buy"><b>' + money(u.cost) + '</b><em>升级</em></span></button>');
-        row.__up = u;
-        if (S.ups[u.key]) row.remove();
-        else {
-          api.on(row, 'click', function () { buyUp(u, row); });
+      function buildPanels() {
+        shopsEl.textContent = ''; upsEl.textContent = '';
+        shopRows = []; upRows = [];
+        SHOPS.forEach(function (sh) {
+          var row = html('<button class="idle-row" type="button">' +
+            '<span class="idle-emoji">' + sh.emoji + '</span>' +
+            '<span class="idle-info"><b>' + sh.name + ' <i>×0</i></b><em>+' + rateFmt(sh.income) + '/秒</em></span>' +
+            '<span class="idle-buy"><b>¥0</b><em>买下</em></span></button>');
+          row.__sh = sh;
+          shopsEl.appendChild(row);
+          shopRows.push(row);
+        });
+        UPS.forEach(function (u) {
+          if (S.ups[u.key]) return;                     // 已买的升级不再显示
+          var row = html('<button class="idle-row" type="button">' +
+            '<span class="idle-emoji">🎁</span>' +
+            '<span class="idle-info"><b>' + u.name + '</b><em>' + u.desc + '</em></span>' +
+            '<span class="idle-buy"><b>' + money(u.cost) + '</b><em>升级</em></span></button>');
+          row.__up = u;
           upsEl.appendChild(row);
           upRows.push(row);
-        }
+        });
+      }
+      // 事件委托：重置后重建面板也不会残留监听
+      api.on(shopsEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.idle-row') : null;
+        if (b && b.__sh) buyShop(b.__sh, b);
       });
+      api.on(upsEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.idle-row') : null;
+        if (b && b.__up) buyUp(b.__up, b);
+      });
+      buildPanels();
 
       function floatText(x, y, txt, cls) {
         var f = html('<span class="idle-float ' + (cls || '') + '">' + txt + '</span>');
@@ -1859,6 +1884,40 @@ canvas{display:block}
         floatText(e.clientX, e.clientY, '+' + money(g));
       });
 
+      /* ---------- 重新开始 ---------- */
+      function askReset() {
+        if ($('.idle-confirm', root)) return;
+        var m = html('<div class="idle-confirm"><div class="idle-confirm-card">' +
+          '<h3>⟳ 重新开始？</h3>' +
+          '<p>你在做的：<b>' + getSubNext() + '</b><br>' +
+          '当前累计 <b>' + money(S.total) + '</b>，开了 ' + shopCount() + ' 家店，用时 ' + durFmt(S.seconds) + '。<br>' +
+          '<span>重置后产业、升级、现金全部清空，且无法恢复（历史最高分会保留）。</span></p>' +
+          '<div class="idle-confirm-actions">' +
+          '<button class="btn primary" data-ok>确认重置</button>' +
+          '<button class="btn ghost" data-cancel>再想想</button>' +
+          '</div></div></div>');
+        $('[data-ok]', m).addEventListener('click', function () { sfx('good'); m.remove(); doReset(); });
+        $('[data-cancel]', m).addEventListener('click', function () { sfx('click'); m.remove(); });
+        root.appendChild(m);
+      }
+      function getSubNext() {
+        var next = null;
+        SHOPS.forEach(function (sh) { if (!next && !owned(sh)) next = sh; });
+        return next ? '下一个目标：' + next.emoji + ' ' + next.name + '（' + money(costOf(next)) + '）' : '所有产业都开齐了';
+      }
+      function doReset() {
+        try { localStorage.removeItem(KEY); } catch (e) { }
+        S = blank();
+        awaySec = 0;
+        offEl.hidden = true;
+        offEl.textContent = '';
+        buildPanels();
+        save();
+        paint();
+        floatText(window.innerWidth / 2, window.innerHeight / 2 - 120, '🧋 重新开张', 'good');
+      }
+      api.on($('[data-reset]', root), 'click', function () { sfx('click'); askReset(); });
+
       /* ---------- 离线结算 ---------- */
       var offGain = 0;
       if (awaySec > 30) {
@@ -1891,6 +1950,7 @@ canvas{display:block}
         upRows.forEach(function (row) {
           row.classList.toggle('can', S.cash >= row.__up.cost);
         });
+        $('[data-played]', root).textContent = '本局用时 ' + durFmt(S.seconds) + ' · ' + shopCount() + ' 家店';
       }
 
       var saveAcc = 0, uiAcc = 0, submitAcc = 0;
