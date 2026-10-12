@@ -397,6 +397,24 @@ canvas{display:block}
 .zs-item b i{font-style:normal;color:var(--o);font-weight:800}
 .zs-item em{font-style:normal;font-size:10.5px;color:var(--dim);line-height:1.4}
 .zs-empty{grid-column:1/-1;font-size:12px;color:#6d768c;text-align:center;padding:7px 0;margin:0}
+/* 队伍 */
+.zs-team{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.26);padding:11px 12px}
+.zs-team h4{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:12px;color:var(--dim);letter-spacing:.6px;margin-bottom:9px;font-weight:600}
+.zs-team h4 em{font-style:normal;font-size:11px;color:#6d768c}
+.zs-mates{display:flex;flex-direction:column;gap:8px}
+.zs-mate{display:flex;align-items:flex-start;gap:10px;padding:10px 11px;border-radius:13px;
+  border:1px solid var(--line);border-left:3px solid rgba(251,113,133,.8);background:rgba(255,255,255,.04)}
+.zs-mate .zs-memoji{font-size:22px;line-height:1.2;flex:0 0 auto}
+.zs-mate .zs-mbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.zs-mate b{font-size:13.5px;font-weight:700}
+.zs-mate em{font-style:normal;font-size:11px;color:var(--dim);line-height:1.5}
+.zs-mate em i{font-style:normal;color:#ffd0ad;font-weight:600}
+.zs-kick{flex:0 0 auto;align-self:center;padding:6px 11px;border-radius:10px;cursor:pointer;font-size:11.5px;
+  border:1px solid rgba(244,63,94,.45);background:rgba(244,63,94,.12);color:#ffb0bd;transition:.15s}
+.zs-kick:hover{background:rgba(244,63,94,.26);color:#fff}
+.zs-card.dis{opacity:.42;cursor:not-allowed;border-color:var(--line)}
+.zs-card.dis:hover{transform:none;background:linear-gradient(150deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-color:var(--line)}
 .zs-log{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.36);padding:12px 14px;
   height:166px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
 .zs-log::-webkit-scrollbar{width:7px}
@@ -2411,21 +2429,21 @@ canvas{display:block}
   };
 
   /* =========================================================
-     游戏 10：凡哥丧尸生存（无尽文字生存 + 背包物品）
+     游戏 10：凡哥丧尸生存（无尽文字生存 + 背包 + 队友）
      每天 3 点行动点；饱食 -15 / 饮水 -20 / 理智 -5 每天；
      第 10 天起尸潮逐日变密，没有天数上限
      ========================================================= */
   var G_ZOMBIE = {
     id: 'zombie', name: '凡哥丧尸生存', emoji: '🧟', cat: '生存', diff: 3,
-    desc: '末世求生。每天 3 点行动点，出门搜物资、躲丧尸，搜到的东西进背包随时用。没有天数上限。',
+    desc: '末世求生。每天 3 点行动点，搜物资、躲丧尸、拉队友。没有天数上限——活多久，算多久。',
     better: 'high', fmt: function (v) { return '存活 ' + v + ' 天'; },
     mount: function (root, api) {
       var AP_PER_DAY = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5;
       var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25;
+      var TEAM_MAX = 2, MEET_SURVIVOR = 0.045;
       var RESCUE_DAYS = [30, 60, 90, 120, 150];
       var WEAPONS = ['空手', '铁棍', '消防斧', '电锯'];
 
-      // 背包物品：分 医疗 / 食物 / 饮品 / 精神 四类
       var ITEMS = [
         { key: 'band', kind: '医疗', name: '创可贴', emoji: '🩹', w: 20, hp: 3, desc: '生命 +3' },
         { key: 'pain', kind: '医疗', name: '止疼药', emoji: '💊', w: 18, hp: 5, desc: '生命 +5' },
@@ -2445,6 +2463,31 @@ canvas{display:block}
         { key: 'calm', kind: '精神', name: '镇定剂', emoji: '💉', w: 6, mind: 10, food: -5, water: -5, desc: '理智 +10 · 饱食 -5 · 饮水 -5' },
         { key: 'cig', kind: '精神', name: '香烟', emoji: '🚬', w: 10, mind: 3, hp: -1, desc: '理智 +3 · 生命 -1' }
       ];
+
+      // 幸存者：danger 越高越难抢/越难杀，反抗伤害越大
+      var SURVIVORS = [
+        { key: 'liuX', name: '刘絮飞扬', emoji: '🧑‍🎓', danger: 1, rec: 0.45,
+          traits: [{ n: '老吃家', d: '你物品的饱食效果额外 +15%' }, { n: '辱凡主义', d: '每天使你理智额外 -1' }],
+          intro: '一个抱着书本的学生，看见你先是一愣，然后把书举起来挡在脸前。' },
+        { key: 'hongC', name: '洪传祺', emoji: '🧑‍🔧', danger: 2, rec: 0.40, needBag: 6,
+          traits: [{ n: '宝王', d: '每次探索 40% 概率额外获得一件物品' }, { n: '顺手牵羊', d: '每天结束 30% 概率从你背包偷走一件' }],
+          intro: '一个背着鼓鼓囊囊登山包的男人，笑眯眯地看着你，手一直没离开包带。' },
+        { key: 'liuK', name: '刘凯豪', emoji: '🧑‍🎤', danger: 3, rec: 0.40,
+          traits: [{ n: '黑帮牢大', d: '你的招募成功率提升' }, { n: '怯战', d: '遇僵尸时 10% 概率逃离队伍' }],
+          intro: '一个脖子上挂着链子的家伙，身后没人，但气势像身后站着一队人。' },
+        { key: 'xuC', name: '徐虫泷', emoji: '🧑‍🍳', danger: 4, rec: 0.35,
+          traits: [{ n: '大力', d: '与僵尸战斗受伤 -10%，5% 概率不受伤' }, { n: '辱凡主义', d: '每天使你理智额外 -1' }],
+          intro: '一个体型壮实的男人，手里拎着半截钢管，看你的眼神像在看一块肉。' }
+      ];
+      function svByKey(k) { for (var i = 0; i < SURVIVORS.length; i++) if (SURVIVORS[i].key === k) return SURVIVORS[i]; return null; }
+      function onTeam(k) { return S.team.indexOf(k) >= 0; }
+      function hasTrait(name) {
+        for (var i = 0; i < S.team.length; i++) {
+          var sv = svByKey(S.team[i]);
+          for (var j = 0; j < sv.traits.length; j++) if (sv.traits[j].n === name) return true;
+        }
+        return false;
+      }
 
       var PLACES = [
         { key: 'store', name: '楼下便利店', emoji: '🏪', desc: '货架还没被搬空',
@@ -2475,6 +2518,7 @@ canvas{display:block}
         '<span class="hud-item">行动点<b data-ap>●●●</b></span>' +
         '<span class="hud-item">武器<b data-weapon>空手</b></span>' +
         '<span class="hud-item">背包<b data-bag>0</b></span>' +
+        '<span class="hud-item">队伍<b data-team>0/2</b></span>' +
         '<span class="hud-item">尸潮<b data-threat>平静</b></span>' +
         '</div>' +
         '<div class="zs">' +
@@ -2486,21 +2530,24 @@ canvas{display:block}
         '<div class="zs-bar k-hp"><span>生命值</span><b data-hp>100</b><i><u data-bh></u></i></div>' +
         '<div class="zs-bar k-food"><span>饱食度</span><b data-food>80</b><i><u data-bf></u></i></div>' +
         '<div class="zs-bar k-water"><span>饮水度</span><b data-water>80</b><i><u data-bw></u></i></div>' +
-        '<div class="zs-bar k-mind"><span>理智值</span><b data-sanity>80</b><i><u data-bm></u></i></div>' +
+        '<div class="zs-bar k-mind"><span>理智值</span><b data-sanity>80<em data-mindcap></em></b><i><u data-bm></u></i></div>' +
         '</div>' +
+        '<div class="zs-team"><h4><span>👥 队伍</span><em data-teamtip>0 / 2</em></h4>' +
+        '<div class="zs-mates" data-mates></div></div>' +
         '<div class="zs-bag"><h4><span>🎒 背包</span><em data-bagtip>点一下就能用</em></h4>' +
         '<div class="zs-items" data-items></div></div>' +
         '<div class="zs-log" data-log></div>' +
         '<div class="zs-ask" data-ask></div>' +
         '<div class="zs-cards" data-cards></div>' +
-        '<p class="tip">每天 3 点行动点，用光就入夜：饱食度 -15、饮水度 -20、理智值 -5，任一归零会持续掉血/掉理智。搜刮时有概率翻到物品，进背包后随时可用、不消耗行动点。第 10 天起尸潮越来越密。</p>' +
+        '<p class="tip">每天 3 点行动点，用光就入夜：饱食度 -15、饮水度 -20、理智值 -5，任一归零会持续掉血/掉理智。探索时极小概率遇到幸存者，可以招募、掠夺、杀害或无视——抢和杀都有风险，队伍里的人也会吃你的、偷你的。</p>' +
         '</div>';
 
       var S, over, pending, rescueOffered;
       var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
-      var itemsEl = $('[data-items]', root);
+      var itemsEl = $('[data-items]', root), matesEl = $('[data-mates]', root);
 
       function clampStat(v) { return Math.max(0, Math.min(100, Math.round(v))); }
+      function clampMind(v) { return Math.max(0, Math.min(S.maxMind, Math.round(v))); }
       function weaponName() { return WEAPONS[Math.min(WEAPONS.length - 1, S.weapon)]; }
       function roll(a, b) { return a + rand(b - a + 1); }
       function threat() { return Math.min(THREAT_MAX, Math.max(0, (S.day - THREAT_FROM) * THREAT_STEP)); }
@@ -2515,11 +2562,8 @@ canvas{display:block}
         for (i = 0; i < list.length; i++) { r -= list[i].w; if (r <= 0) return list[i]; }
         return list[list.length - 1];
       }
-      function bagCount() {
-        var n = 0;
-        ITEMS.forEach(function (it) { n += S.bag[it.key] || 0; });
-        return n;
-      }
+      function bagCount() { var n = 0; ITEMS.forEach(function (it) { n += S.bag[it.key] || 0; }); return n; }
+      function foodMult() { return 1 - 0.05 * S.team.length; }        // 队友会分掉你的口粮
       function addLog(text, cls) {
         var line = html('<div class="zs-line ' + (cls || '') + '">' + text + '</div>');
         logEl.appendChild(line);
@@ -2534,24 +2578,43 @@ canvas{display:block}
         $('[data-ap]', root).textContent = S.ap > 0 ? new Array(S.ap + 1).join('●') + new Array(AP_PER_DAY - S.ap + 1).join('○') : '用完';
         $('[data-weapon]', root).textContent = weaponName();
         $('[data-bag]', root).textContent = bagCount();
+        $('[data-team]', root).textContent = S.team.length + '/' + TEAM_MAX;
         $('[data-threat]', root).textContent = threatLabel();
         $('[data-hp]', root).textContent = S.hp;
         $('[data-food]', root).textContent = S.food;
         $('[data-water]', root).textContent = S.water;
-        $('[data-sanity]', root).textContent = S.sanity;
+        $('[data-sanity]', root).firstChild.nodeValue = String(S.sanity);
+        $('[data-mindcap]', root).textContent = S.maxMind < 100 ? '/' + S.maxMind : '';
         $('[data-bh]', root).style.width = S.hp + '%';
         $('[data-bf]', root).style.width = S.food + '%';
         $('[data-bw]', root).style.width = S.water + '%';
-        $('[data-bm]', root).style.width = S.sanity + '%';
+        $('[data-bm]', root).style.width = (S.sanity / S.maxMind * 100).toFixed(1) + '%';
         [['k-hp', S.hp], ['k-food', S.food], ['k-water', S.water], ['k-mind', S.sanity]].forEach(function (p) {
           var el = $('.' + p[0], root);
           if (el) el.classList.toggle('low', p[1] <= 25);
         });
       }
+      function renderMates() {
+        matesEl.textContent = '';
+        if (!S.team.length) {
+          matesEl.appendChild(html('<p class="zs-empty">队伍里只有你自己。探索时有机会遇到幸存者。</p>'));
+        } else {
+          S.team.forEach(function (k) {
+            var sv = svByKey(k);
+            var html2 = '<div class="zs-mate"><span class="zs-memoji">' + sv.emoji + '</span>' +
+              '<div class="zs-mbody"><b>' + sv.name + '</b>' +
+              sv.traits.map(function (t) { return '<em><i>' + t.n + '</i>：' + t.d + '</em>'; }).join('') +
+              '</div><button class="zs-kick" data-kick="' + sv.key + '">驱赶</button></div>';
+            matesEl.appendChild(html(html2));
+          });
+        }
+        var tips = [];
+        if (S.team.length) tips.push('口粮 -' + (S.team.length * 5) + '%');
+        $('[data-teamtip]', root).textContent = S.team.length + ' / ' + TEAM_MAX + (tips.length ? ' · ' + tips.join(' · ') : '');
+      }
       function renderBag() {
         itemsEl.textContent = '';
         var any = false;
-        // 按 医疗 → 食物 → 饮品 → 精神 排序，同类聚在一起好找
         ['医疗', '食物', '饮品', '精神'].forEach(function (kind) {
           ITEMS.forEach(function (it) {
             if (it.kind !== kind) return;
@@ -2573,7 +2636,7 @@ canvas{display:block}
       function renderCards(items) {
         cardsEl.textContent = '';
         items.forEach(function (it) {
-          var b = html('<button class="zs-card' + (it.cls ? ' ' + it.cls : '') + '">' +
+          var b = html('<button class="zs-card' + (it.cls ? ' ' + it.cls : '') + (it.dis ? ' dis' : '') + '">' +
             '<span class="zs-emoji">' + it.emoji + '</span>' +
             '<span class="zs-cbody"><b>' + it.name + '</b><em>' + it.desc + '</em></span></button>');
           b.__it = it;
@@ -2596,11 +2659,27 @@ canvas{display:block}
       }
 
       /* ---------- 物品 ---------- */
-      function grantItem(silent) {
+      function grantItem() {
         var it = pickWeighted(ITEMS);
         S.bag[it.key] = (S.bag[it.key] || 0) + 1;
         renderBag();
         return it;
+      }
+      function loseRandomItem() {
+        var pool = [];
+        ITEMS.forEach(function (it) { if (S.bag[it.key]) pool.push(it); });
+        if (!pool.length) return null;
+        var it = pool[rand(pool.length)];
+        S.bag[it.key]--;
+        if (!S.bag[it.key]) delete S.bag[it.key];
+        renderBag();
+        return it;
+      }
+      // 老吃家：物品的饱食效果 +15%
+      function itemFoodValue(it) {
+        var v = it.food || 0;
+        if (v > 0 && hasTrait('老吃家')) v = Math.round(v * 1.15);
+        return v;
       }
       function useItem(it) {
         if (over || !S.bag[it.key]) return;
@@ -2611,12 +2690,15 @@ canvas{display:block}
         }
         S.bag[it.key]--;
         if (!S.bag[it.key]) delete S.bag[it.key];
-        if (it.hp) S.hp = clampStat(S.hp + it.hp);
-        if (it.food) S.food = clampStat(S.food + it.food);
-        if (it.water) S.water = clampStat(S.water + it.water);
-        if (it.mind) S.sanity = clampStat(S.sanity + it.mind);
+        var parts = [];
+        if (it.hp) { S.hp = clampStat(S.hp + it.hp); parts.push('生命 ' + (it.hp > 0 ? '+' : '') + it.hp); }
+        var fv = itemFoodValue(it);
+        if (fv) { S.food = clampStat(S.food + fv); parts.push('饱食 ' + (fv > 0 ? '+' : '') + fv + (hasTrait('老吃家') && it.food > 0 ? '（老吃家加成）' : '')); }
+        else if (it.food) { S.food = clampStat(S.food + it.food); }
+        if (it.water) { S.water = clampStat(S.water + it.water); parts.push('饮水 ' + (it.water > 0 ? '+' : '') + it.water); }
+        if (it.mind) { S.sanity = clampMind(S.sanity + it.mind); parts.push('理智 ' + (it.mind > 0 ? '+' : '') + it.mind); }
         sfx('good');
-        addLog('🎒 你用了「' + it.emoji + ' ' + it.name + '」：' + it.desc, 'good');
+        addLog('🎒 你用了「' + it.emoji + ' ' + it.name + '」：' + parts.join(' · '), 'good');
         renderBag();
         paint();
         if (S.hp <= 0) die('身体已经撑不住了');
@@ -2632,7 +2714,7 @@ canvas{display:block}
         var e = forced ? { t: 'zombie' } : pickWeighted(place.table);
         if (e.t === 'zombie') {
           var loot = pickWeighted(place.table.filter(function (x) { return x.t !== 'zombie'; }));
-          pending = { place: place, entry: loot };
+          pending = { kind: 'zombie', place: place, entry: loot };
           askEl.textContent = forced
             ? '🧟 尸潮涌了过来——跑不掉了，只能应战！'
             : '🧟 货架后面传来拖沓的脚步声——你被发现了！';
@@ -2647,17 +2729,24 @@ canvas{display:block}
         }
         applyEntry(e, place);
         if (S.hp <= 0) return die('在' + place.name + '流了太多血');
+        // 宝王：额外物品
+        if (hasTrait('宝王') && Math.random() < 0.40) {
+          var bx = grantItem();
+          addLog('　💠 洪传祺翻出个「' + bx.emoji + ' ' + bx.name + '」丢给你（宝王）', 'good');
+        }
+        // 遇到幸存者
+        if (Math.random() < MEET_SURVIVOR) return meetSurvivor(place);
         if (S.ap <= 0) return endDay();
         showPlaces();
         paint();
       }
       function applyEntry(e, place) {
-        var txt;
-        if (e.t === 'food') { var f = roll(e.a, e.b); S.food = clampStat(S.food + f); txt = '翻到一些吃的，饱食度 +' + f; }
-        else if (e.t === 'water') { var w = roll(e.a, e.b); S.water = clampStat(S.water + w); txt = '找到饮用水，饮水度 +' + w; }
+        var txt, fm = foodMult();
+        if (e.t === 'food') { var f = Math.max(1, Math.round(roll(e.a, e.b) * fm)); S.food = clampStat(S.food + f); txt = '翻到一些吃的，饱食度 +' + f + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : ''); }
+        else if (e.t === 'water') { var w = Math.max(1, Math.round(roll(e.a, e.b) * fm)); S.water = clampStat(S.water + w); txt = '找到饮用水，饮水度 +' + w + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : ''); }
         else if (e.t === 'item') { var it = grantItem(); txt = '翻到一个「' + it.emoji + ' ' + it.name + '」，塞进了背包'; }
         else if (e.t === 'weapon') { S.weapon = Math.min(WEAPONS.length - 1, S.weapon + 1); txt = '捡到一件趁手的东西，武器升级为「' + weaponName() + '」'; }
-        else if (e.t === 'sanity') { var s = roll(e.a, e.b); S.sanity = clampStat(S.sanity + s); txt = '这儿让你稍微安心了一点，理智值 +' + s; }
+        else if (e.t === 'sanity') { var s = roll(e.a, e.b); S.sanity = clampMind(S.sanity + s); txt = '这儿让你稍微安心了一点，理智值 +' + s; }
         else if (e.t === 'hurt') { var d = roll(e.a, e.b); S.hp = clampStat(S.hp - d); txt = '被碎玻璃划伤了，生命值 -' + d; }
         else txt = '什么也没找到。';
         addLog('　' + place.emoji + ' ' + txt, e.t === 'hurt' ? 'bad' : 'good');
@@ -2667,26 +2756,145 @@ canvas{display:block}
         }
       }
 
+      /* ---------- 遭遇幸存者 ---------- */
+      function meetSurvivor(place) {
+        // 已经在队伍里的人不会再冒出来一次
+        var pool = SURVIVORS.filter(function (s) { return !onTeam(s.key); });
+        if (!pool.length) {
+          if (S.ap <= 0) return endDay();
+          showPlaces(); paint();
+          return;
+        }
+        var sv = pool[rand(pool.length)];
+        pending = { kind: 'survivor', sv: sv, place: place };
+        var full = S.team.length >= TEAM_MAX;
+        var canRec = !full && !onTeam(sv.key) && !(sv.needBag && bagCount() < sv.needBag);
+        var recP = Math.round(recruitChance(sv) * 100);
+        var plP = Math.round(plunderChance(sv) * 100);
+        var klP = Math.round(killChance(sv) * 100);
+        var talk = sv.name + '：' + sv.traits.map(function (t) { return t.n + '（' + t.d + '）'; }).join('；');
+        addLog('👤 你在' + place.name + '撞见了 <b>' + sv.name + '</b>。' + sv.intro, 'night');
+        addLog('　特质：' + talk, 'dim');
+        askEl.innerHTML = '👤 遇到了幸存者 <b>' + sv.name + '</b>——怎么办？';
+        renderCards([
+          { kind: 'recruit', emoji: '🤝', name: '招募他', cls: 'go', dis: !canRec,
+            desc: full ? '队伍已满（' + TEAM_MAX + '/' + TEAM_MAX + '）' : (sv.needBag && bagCount() < sv.needBag ? '需要背包物品 > ' + (sv.needBag - 1) + ' 件（现有 ' + bagCount() + '）' : '成功率约 ' + recP + '% · 成功则加入队伍') },
+          { kind: 'plunder', emoji: '👜', name: '掠夺他', cls: 'danger', dis: sv.key === 'xuC' && S.team.length < 2,
+            desc: sv.key === 'xuC' && S.team.length < 2 ? '徐虫泷太壮，需要队伍已有 2 人才敢动手' : '成功率约 ' + plP + '% · 成功理智 -10，会有反抗' },
+          { kind: 'kill', emoji: '🔪', name: '杀害他', cls: 'danger', dis: sv.key === 'xuC' && S.team.length < 2,
+            desc: sv.key === 'xuC' && S.team.length < 2 ? '徐虫泷太壮，需要队伍已有 2 人才敢动手' : '成功率约 ' + klP + '% · 成功理智上限 -15（永久）' },
+          { kind: 'ignore', emoji: '🚶', name: '置之不理', desc: '当作没看见，各走各的' }
+        ]);
+        sfx('click');
+        paint();
+      }
+      function recruitChance(sv) {
+        var p = sv.rec;
+        if (hasTrait('黑帮牢大')) p += 0.12;
+        return Math.min(0.9, p);
+      }
+      function plunderChance(sv) { return Math.max(0.15, 0.65 - sv.danger * 0.08); }
+      function killChance(sv) { return Math.max(0.15, 0.72 - sv.danger * 0.08); }
+
+      function resolveSurvivor(kind) {
+        var sv = pending.sv, place = pending.place;
+        pending = null;
+        if (kind === 'ignore') {
+          sfx('click');
+          addLog('　🚶 你和他对视了两秒，各自转身走开。', 'good');
+        } else if (kind === 'recruit') {
+          if (onTeam(sv.key)) { addLog('　他本来就在你队伍里，冲你点了点头。', 'good'); }
+          else if (S.team.length >= TEAM_MAX) { addLog('　队伍已经满了，他摆摆手走了。', 'bad'); }
+          else if (sv.needBag && bagCount() < sv.needBag) { addLog('　他瞟了眼你空荡荡的包，嗤笑一声走了。', 'bad'); }
+          else if (Math.random() < recruitChance(sv)) {
+            S.team.push(sv.key);
+            S.sanity = clampMind(S.sanity + 6);
+            sfx('win');
+            addLog('　🤝 <b>' + sv.name + ' 加入了队伍。</b>（理智 +6）', 'night');
+            renderMates();
+          } else {
+            S.sanity = clampMind(S.sanity - 3);
+            sfx('hit');
+            addLog('　他盯着你看了几秒，摇头拒绝了。（理智 -3）', 'bad');
+          }
+        } else {
+          var isKill = kind === 'kill';
+          var chance = isKill ? killChance(sv) : plunderChance(sv);
+          if (Math.random() < chance) {
+            // 成功
+            if (isKill) {
+              S.maxMind = Math.max(0, S.maxMind - 15);
+              S.sanity = clampMind(S.sanity);
+              addLog('　🔪 <b>你把他留在了那里。</b>理智上限 -15（永久），现在上限 ' + S.maxMind, 'night');
+            } else {
+              S.sanity = clampMind(S.sanity - 10);
+              addLog('　👜 <b>你抢走了他的东西。</b>理智 -10', 'night');
+            }
+            if (Math.random() < 0.6) {
+              var n = roll(1, 3), got = [];
+              for (var i = 0; i < n; i++) { var it = grantItem(); got.push(it.emoji + it.name); }
+              addLog('　收获：' + got.join('、'), 'good');
+            } else addLog('　他身上什么也没有，你空手而归。', 'bad');
+            sfx(isKill ? 'hit' : 'good');
+          } else {
+            // 失败：反抗
+            var dmg = roll(6 + sv.danger * 3, 12 + sv.danger * 4);
+            S.hp = clampStat(S.hp - dmg);
+            S.sanity = clampMind(S.sanity - 5);
+            addLog('　💥 <b>' + sv.name + ' 反抗了！</b>你被撂倒，生命值 -' + dmg + '，理智 -5', 'bad');
+            if (Math.random() < 0.15 + sv.danger * 0.05) {
+              var lost = loseRandomItem();
+              var lost2 = Math.random() < 0.5 ? loseRandomItem() : null;
+              var names = [lost, lost2].filter(Boolean).map(function (x) { return x.emoji + x.name; });
+              if (names.length) addLog('　🎒 他反手抢走了你的：' + names.join('、'), 'bad');
+              else addLog('　他翻了你的包，但里面什么都没有。', 'bad');
+            }
+            sfx('hit');
+          }
+          if (S.hp <= 0) return die('被' + sv.name + '打倒在了' + place.name);
+        }
+        if (S.maxMind <= 0 || S.sanity <= 0) return goMad();
+        if (S.ap <= 0) return endDay();
+        showPlaces();
+        paint();
+      }
+
       /* ---------- 遭遇战 ---------- */
       function resolveEncounter(kind) {
-        if (!pending) return;
+        if (!pending || pending.kind !== 'zombie') return;
         var e = pending.entry, place = pending.place;
         pending = null;
+        // 怯战：刘凯豪有 10% 概率直接跑掉
+        if (hasTrait('怯战') && Math.random() < 0.10) {
+          var idx = S.team.indexOf('liuK');
+          S.team.splice(idx, 1);
+          renderMates();
+          addLog('　🏃 <b>刘凯豪丢下你跑了。</b>（怯战触发，他离开了队伍）', 'bad');
+          sfx('hit');
+          if (S.ap <= 0) return endDay();
+          showPlaces(); paint();
+          return;
+        }
         var looted = false, txt;
         if (kind === 'fight') {
-          var dmg = Math.round(Math.max(3, 20 - S.weapon * 6) * (0.5 + Math.random()));
+          var base = Math.max(3, 20 - S.weapon * 6) * (0.5 + Math.random());
+          if (hasTrait('大力')) {
+            if (Math.random() < 0.05) { base = 0; }
+            else base = base * 0.9;
+          }
+          var dmg = Math.round(base);
           S.hp = clampStat(S.hp - dmg);
-          S.sanity = clampStat(S.sanity - 8);
+          S.sanity = clampMind(S.sanity - 8);
           looted = true;
-          txt = '你用' + weaponName() + '把它砸倒，手臂被抓出几道口子（生命值 -' + dmg + '，理智 -8）';
+          txt = '你用' + weaponName() + '把它砸倒' + (dmg ? '，手臂被抓出几道口子（生命值 -' + dmg + '，理智 -8）' : '，<b>徐虫泷一把替你挡下（大力）</b>，你毫发无伤（理智 -8）');
           sfx('hit');
         } else if (kind === 'flee') {
-          S.sanity = clampStat(S.sanity - 6);
+          S.sanity = clampMind(S.sanity - 6);
           if (Math.random() < 0.28) { var d2 = roll(8, 18); S.hp = clampStat(S.hp - d2); txt = '你转身就跑，在楼道里摔了一跤（生命值 -' + d2 + '，物资没拿到）'; }
           else txt = '你屏住呼吸退了出去，什么也没拿到（理智 -6）';
           sfx('click');
         } else {
-          if (Math.random() < 0.55) { S.sanity = clampStat(S.sanity - 4); looted = true; txt = '它从你面前两米的地方走了过去，你等它走远才敢动（理智 -4）'; }
+          if (Math.random() < 0.55) { S.sanity = clampMind(S.sanity - 4); looted = true; txt = '它从你面前两米的地方走了过去，你等它走远才敢动（理智 -4）'; }
           else { var d3 = roll(12, 22); S.hp = clampStat(S.hp - d3); txt = '它闻到了你的味道，一口咬在小臂上（生命值 -' + d3 + '）'; }
           sfx('hit');
         }
@@ -2702,12 +2910,22 @@ canvas{display:block}
       function endDay() {
         S.food = clampStat(S.food - FOOD_DROP);
         S.water = clampStat(S.water - WATER_DROP);
-        S.sanity = clampStat(S.sanity - MIND_DROP);
+        S.sanity = clampMind(S.sanity - MIND_DROP);
         var lines = ['🌙 第 ' + S.day + ' 天结束了 · ' + NIGHT[rand(NIGHT.length)]];
         lines.push('饱食度 -' + FOOD_DROP + '，饮水度 -' + WATER_DROP + '，理智值 -' + MIND_DROP);
         if (S.food <= 0) { S.hp = clampStat(S.hp - 8); lines.push('肚子里一点东西都没有了，生命值 -8'); }
         if (S.water <= 0) { S.hp = clampStat(S.hp - 12); lines.push('喉咙干得发疼，生命值 -12'); }
         if (S.food > 30 && S.water > 30 && S.hp < 100) { S.hp = clampStat(S.hp + 3); lines.push('吃饱喝足，睡了个整觉，生命值 +3'); }
+        // 队友的每日影响
+        var haters = S.team.filter(function (k) { return k === 'liuX' || k === 'xuC'; });
+        if (haters.length) {
+          S.sanity = clampMind(S.sanity - haters.length);
+          lines.push(haters.map(function (k) { return svByKey(k).name; }).join('、') + ' 又在你耳边念叨凡哥——理智额外 -' + haters.length + '（辱凡主义）');
+        }
+        if (onTeam('hongC') && Math.random() < 0.30) {
+          var stolen = loseRandomItem();
+          if (stolen) lines.push('🎒 洪传祺半夜翻了你的包，「' + stolen.emoji + ' ' + stolen.name + '」不见了（顺手牵羊）');
+        }
         if (S.sanity <= 20) lines.push('你已经很久没跟活人说过话了……');
         addLog(lines.join('<br>'), 'night');
         paint();
@@ -2746,7 +2964,7 @@ canvas{display:block}
           result: 'lose',
           title: '💀 倒下了',
           sub: reason + '<br>一共活了 <b>' + S.day + ' 天</b>' +
-               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 背包还剩 ' + bagCount() + ' 件东西</span>',
+               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 背包 ' + bagCount() + ' 件 · 队伍 ' + S.team.length + ' 人</span>',
           againText: '再来一次',
           onRestart: reset
         });
@@ -2760,8 +2978,9 @@ canvas{display:block}
         api.gameOver({
           result: 'lose',
           title: '🌀 理智崩溃',
-          sub: '你一个人待得太久了<br>撑到了第 <b>' + S.day + ' 天</b>' +
-               '<br><span style="color:#8a93ab;font-size:12.5px">下次多去有活人气息的地方待一会儿</span>',
+          sub: (S.maxMind <= 0 ? '你亲手把最后一点人性也杀没了' : '你一个人待得太久了') +
+               '<br>撑到了第 <b>' + S.day + ' 天</b>' +
+               '<br><span style="color:#8a93ab;font-size:12.5px">理智上限 ' + S.maxMind + ' · 队伍 ' + S.team.length + ' 人</span>',
           againText: '再来一次',
           onRestart: reset
         });
@@ -2772,11 +2991,12 @@ canvas{display:block}
         askEl.textContent = '这一轮结束了';
         cardsEl.textContent = '';
         api.submit(S.day);
+        var mates = S.team.length ? S.team.map(function (k) { return svByKey(k).name; }).join('、') : '没有人';
         api.gameOver({
           result: 'win',
           title: '🚁 撤离成功',
           sub: '你在末世里撑了 <b>' + S.day + ' 天</b>，等到了救援' +
-               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 生命 ' + S.hp + ' · 理智 ' + S.sanity + ' · 背包 ' + bagCount() + ' 件</span>',
+               '<br><span style="color:#8a93ab;font-size:12.5px">一起上飞机的：' + mates + '</span>',
           againText: '再来一次',
           onRestart: reset
         });
@@ -2785,7 +3005,7 @@ canvas{display:block}
         if (over || pending || S.ap <= 0) return;
         S.ap--;
         var sm = roll(10, 18), hm = (S.food > 20 && S.water > 20) ? roll(2, 6) : 0;
-        S.sanity = clampStat(S.sanity + sm);
+        S.sanity = clampMind(S.sanity + sm);
         if (hm) S.hp = clampStat(S.hp + hm);
         sfx('good');
         addLog('<b>第 ' + S.day + ' 天</b> · 🏠 你在据点里躺了一会儿：理智 +' + sm + (hm ? '，生命 +' + hm : '，但肚子空着没缓过来'), 'good');
@@ -2796,29 +3016,45 @@ canvas{display:block}
 
       /* ---------- 初始化 ---------- */
       function reset() {
-        S = { day: 1, ap: AP_PER_DAY, hp: 100, food: 80, water: 80, sanity: 80, weapon: 0, bag: {} };
+        S = { day: 1, ap: AP_PER_DAY, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, weapon: 0, bag: {}, team: [] };
         over = false; pending = null; rescueOffered = {};
         logEl.textContent = '';
         addLog('🧟 <b>末世第 1 天</b>。你叫章哲凡，醒来时宿舍楼已经空了。', 'night');
         addLog('手机没信号，楼道里有拖沓的脚步声。你摸了摸口袋——什么都没有。');
-        addLog('活下去。每天只有 <b>3 点行动点</b>，搜到的东西会进背包。');
+        addLog('活下去。每天只有 <b>3 点行动点</b>，搜到的东西进背包，遇到活人可以拉进队伍。');
         renderBag();
+        renderMates();
         showPlaces();
         paint();
       }
       api.on(cardsEl, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('.zs-card') : null;
-        if (!b || !b.__it || over) return;
+        if (!b || !b.__it || over || b.classList.contains('dis')) return;
         var it = b.__it;
         if (it.kind === 'place') explore(it.place);
         else if (it.kind === 'rest') restAction();
         else if (it.kind === 'fight' || it.kind === 'flee' || it.kind === 'hide') resolveEncounter(it.kind);
+        else if (it.kind === 'recruit' || it.kind === 'plunder' || it.kind === 'kill' || it.kind === 'ignore') resolveSurvivor(it.kind);
         else if (it.kind === 'rescue') rescue();
         else if (it.kind === 'stay') { sfx('click'); addLog('🏠 你摇了摇头，转身下楼。直升机的声音越来越远。', 'bad'); showPlaces(); paint(); }
       });
       api.on(itemsEl, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('.zs-item') : null;
         if (b && b.__it) useItem(b.__it);
+      });
+      api.on(matesEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.zs-kick') : null;
+        if (!b || over) return;
+        var k = b.getAttribute('data-kick'), sv = svByKey(k);
+        var i = S.team.indexOf(k);
+        if (i < 0) return;
+        S.team.splice(i, 1);
+        S.sanity = clampMind(S.sanity - 4);
+        sfx('hit');
+        addLog('👋 你把 <b>' + sv.name + '</b> 赶走了。（理智 -4）', 'bad');
+        renderMates();
+        paint();
+        if (S.sanity <= 0) goMad();
       });
       reset();
     }
