@@ -415,6 +415,47 @@ canvas{display:block}
 .zs-kick:hover{background:rgba(244,63,94,.26);color:#fff}
 .zs-card.dis{opacity:.42;cursor:not-allowed;border-color:var(--line)}
 .zs-card.dis:hover{transform:none;background:linear-gradient(150deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-color:var(--line)}
+/* 开局特性选择 */
+.zs-setup{display:none}
+.zs.setup-mode > *{display:none !important}
+.zs.setup-mode > .zs-setup{display:block !important}
+.zs-setup-inner{border:1px solid var(--line);border-radius:18px;background:rgba(0,0,0,.32);padding:20px 22px}
+.zs-setup-inner h3{font-size:19px;font-weight:800;letter-spacing:.5px;margin-bottom:8px}
+.zs-setup-tip{font-size:12.5px;color:var(--dim);line-height:1.7;margin-bottom:14px}
+.zs-setup-tip b{color:var(--o)}
+.zs-pts{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--dim);
+  border:1px dashed rgba(255,255,255,.16);border-radius:12px;padding:10px 14px;margin-bottom:16px}
+.zs-pts b{font-size:24px;font-weight:800;line-height:1}
+.zs-pts b.ok{color:#34d399}
+.zs-pts b.neg{color:#fb7185}
+.zs-featgroup{margin-bottom:16px}
+.zs-gname{display:block;font-size:12px;letter-spacing:1px;margin-bottom:9px;font-weight:700}
+.zs-gname.bad{color:#fb7185}
+.zs-gname.good{color:#34d399}
+.zs-featlist{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.zs-featcard{display:flex;flex-direction:column;gap:5px;text-align:left;padding:11px 13px;border-radius:13px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);transition:.15s}
+.zs-featcard:hover{transform:translateY(-2px)}
+.zs-featcard .zs-fc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.zs-featcard b{font-size:13.5px;font-weight:700}
+.zs-featcard i{font-style:normal;font-size:14px;font-weight:800;padding:1px 8px;border-radius:8px}
+.zs-featcard em{font-style:normal;font-size:11px;color:var(--dim);line-height:1.5}
+.zs-featcard.bad i{color:#fb7185;background:rgba(244,63,94,.14)}
+.zs-featcard.good i{color:#34d399;background:rgba(52,211,153,.14)}
+.zs-featcard.bad.on{border-color:rgba(244,63,94,.65);background:rgba(244,63,94,.13)}
+.zs-featcard.good.on{border-color:rgba(52,211,153,.65);background:rgba(52,211,153,.13)}
+.zs-featcard.on b::after{content:' ✓';color:#fff}
+.zs-gostart{width:100%;padding:14px;border-radius:14px;cursor:pointer;font-size:15px;font-weight:800;letter-spacing:1px;
+  border:1px solid rgba(52,211,153,.55);background:linear-gradient(135deg,rgba(52,211,153,.9),rgba(20,184,166,.9));color:#04120c;transition:.15s}
+.zs-gostart:hover:not(:disabled){filter:brightness(1.1)}
+.zs-gostart:disabled{cursor:not-allowed;border-color:var(--line);background:rgba(255,255,255,.06);color:#7a8399}
+/* 局内特性条 */
+.zs-feats{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.zs-featchip{font-size:11.5px;padding:4px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.zs-featchip.bad{color:#ffb0bd;border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.1)}
+.zs-featchip.good{color:#8ff0c8;border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
+.zs-featnone{font-size:11.5px;color:#6d768c}
+@media (max-width:640px){ .zs-featlist{grid-template-columns:1fr} }
 .zs-log{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.36);padding:12px 14px;
   height:166px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
 .zs-log::-webkit-scrollbar{width:7px}
@@ -2438,9 +2479,36 @@ canvas{display:block}
     desc: '末世求生。每天 3 点行动点，搜物资、躲丧尸、拉队友。没有天数上限——活多久，算多久。',
     better: 'high', fmt: function (v) { return '存活 ' + v + ' 天'; },
     mount: function (root, api) {
-      var AP_PER_DAY = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5;
+      var AP_BASE = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5, MIND_DROP_OPTIM = 2;
       var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05;
-      var TEAM_MAX = 2, MEET_SURVIVOR = 0.045, MEET_BONUS = 0.03;
+      var TEAM_BASE = 2, MEET_SURVIVOR = 0.045, MEET_BONUS = 0.03;
+
+      // 开局特性：坏特性给特性点，好特性花特性点，结算 >= 0 才能开局
+      var TRAITS = [
+        { key: 'drunk', n: '酒鬼', good: false, pt: 1,
+          d: '每日必须抽掉一包香烟，否则当天结束时理智额外 -2' },
+        { key: 'lone', n: '孤狼', good: false, pt: 2,
+          d: '你无法招募幸存者' },
+        { key: 'starve', n: '饿死鬼', good: false, pt: 1,
+          d: '每日结束饱食度额外 -5' },
+        { key: 'optim', n: '乐观主义者', good: true, pt: 1,
+          d: '每日结束减少的理智值从 5 变成 2' },
+        { key: 'leader', n: '领导者', good: true, pt: 1,
+          d: '你的队伍上限 +1（2 → 3）' },
+        { key: 'night', n: '晚上没事瞎溜达凡', good: true, pt: 2,
+          d: '你的行动点上限 +1（3 → 4）' },
+        { key: 'runner', n: '跑男', good: true, pt: 1,
+          d: '你的遭遇战逃跑成功概率提升 5%' }
+      ];
+      function traitByKey(k) { for (var i = 0; i < TRAITS.length; i++) if (TRAITS[i].key === k) return TRAITS[i]; return null; }
+      function hasFeat(k) { return !!(S && S.feats && S.feats[k]); }
+      function apPerDay() { return AP_BASE + (hasFeat('night') ? 1 : 0); }
+      function teamMax() { return TEAM_BASE + (hasFeat('leader') ? 1 : 0); }
+      function traitPoints(sel) {
+        var p = 0;
+        TRAITS.forEach(function (t) { if (sel[t.key]) p += t.good ? -t.pt : t.pt; });
+        return p;
+      }
       var MILESTONES = [30, 50, 80, 120, 200, 365];
       var WEAPONS = ['空手', '铁棍', '消防斧', '电锯'];
 
@@ -2533,6 +2601,7 @@ canvas{display:block}
         '<span class="hud-item">尸潮<b data-threat>平静</b></span>' +
         '</div>' +
         '<div class="zs">' +
+        '<div class="zs-setup" data-setup></div>' +
         '<div class="zs-hero">' +
         '<img class="zs-face" src="assets/hero.jpg" alt="凡哥" width="640" height="640">' +
         '<span class="zs-tag">章哲凡 · 末世第 <b data-day2>1</b> 天</span>' +
@@ -2545,6 +2614,7 @@ canvas{display:block}
         '</div>' +
         '<div class="zs-team"><h4><span>👥 队伍</span><em data-teamtip>0 / 2</em></h4>' +
         '<div class="zs-mates" data-mates></div></div>' +
+        '<div class="zs-feats" data-feats></div>' +
         '<div class="zs-bag"><h4><span>🎒 背包</span><em data-bagtip>点一下就能用</em></h4>' +
         '<div class="zs-items" data-items></div></div>' +
         '<div class="zs-log" data-log></div>' +
@@ -2556,6 +2626,7 @@ canvas{display:block}
       var S, over, pending;
       var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
       var itemsEl = $('[data-items]', root), matesEl = $('[data-mates]', root);
+      var setupEl = $('[data-setup]', root), featsEl = $('[data-feats]', root);
 
       function clampStat(v) { return Math.max(0, Math.min(100, Math.round(v))); }
       function clampMind(v) { return Math.max(0, Math.min(S.maxMind, Math.round(v))); }
@@ -2598,10 +2669,10 @@ canvas{display:block}
       function paint() {
         $('[data-day]', root).textContent = S.day;
         $('[data-day2]', root).textContent = S.day;
-        $('[data-ap]', root).textContent = S.ap > 0 ? new Array(S.ap + 1).join('●') + new Array(AP_PER_DAY - S.ap + 1).join('○') : '用完';
+        $('[data-ap]', root).textContent = S.ap > 0 ? new Array(S.ap + 1).join('●') + new Array(apPerDay() - S.ap + 1).join('○') : '用完';
         $('[data-weapon]', root).textContent = weaponName();
         $('[data-bag]', root).textContent = bagCount();
-        $('[data-team]', root).textContent = S.team.length + '/' + TEAM_MAX;
+        $('[data-team]', root).textContent = S.team.length + '/' + teamMax();
         $('[data-threat]', root).textContent = threatLabel();
         $('[data-hp]', root).textContent = S.hp;
         $('[data-food]', root).textContent = S.food;
@@ -2633,7 +2704,7 @@ canvas{display:block}
         }
         var tips = [];
         if (S.team.length) tips.push('口粮 -' + (S.team.length * 5) + '%');
-        $('[data-teamtip]', root).textContent = S.team.length + ' / ' + TEAM_MAX + (tips.length ? ' · ' + tips.join(' · ') : '');
+        $('[data-teamtip]', root).textContent = S.team.length + ' / ' + teamMax() + (tips.length ? ' · ' + tips.join(' · ') : '');
       }
       function renderBag() {
         itemsEl.textContent = '';
@@ -2713,6 +2784,7 @@ canvas{display:block}
         }
         S.bag[it.key]--;
         if (!S.bag[it.key]) delete S.bag[it.key];
+        if (it.key === 'cig') S.cigToday = true;   // 酒鬼：今天的烟抽过了
         var parts = [];
         if (it.hp) { S.hp = clampStat(S.hp + it.hp); parts.push('生命 ' + (it.hp > 0 ? '+' : '') + it.hp); }
         var fv = itemFoodValue(it);
@@ -2792,8 +2864,8 @@ canvas{display:block}
         }
         var sv = pool[rand(pool.length)];
         pending = { kind: 'survivor', sv: sv, place: place };
-        var full = S.team.length >= TEAM_MAX;
-        var canRec = !full && !onTeam(sv.key) && !(sv.needBag && bagCount() < sv.needBag);
+        var full = S.team.length >= teamMax();
+        var canRec = !hasFeat('lone') && !full && !onTeam(sv.key) && !(sv.needBag && bagCount() < sv.needBag);
         var recP = Math.round(recruitChance(sv) * 100);
         var plP = Math.round(plunderChance(sv) * 100);
         var klP = Math.round(killChance(sv) * 100);
@@ -2816,7 +2888,7 @@ canvas{display:block}
         }
         renderCards([
           { kind: 'recruit', emoji: '🤝', name: '招募他', cls: 'go', dis: !canRec,
-            desc: full ? '队伍已满（' + TEAM_MAX + '/' + TEAM_MAX + '）' : (sv.needBag && bagCount() < sv.needBag ? '需要背包物品 > ' + (sv.needBag - 1) + ' 件（现有 ' + bagCount() + '）' : '成功率约 ' + recP + '% · 成功则加入队伍') },
+            desc: hasFeat('lone') ? '孤狼：你无法招募幸存者' : (full ? '队伍已满（' + teamMax() + '/' + teamMax() + '）' : (sv.needBag && bagCount() < sv.needBag ? '需要背包物品 > ' + (sv.needBag - 1) + ' 件（现有 ' + bagCount() + '）' : '成功率约 ' + recP + '% · 成功则加入队伍')) },
           { kind: 'plunder', emoji: '👜', name: '掠夺他', cls: 'danger', dis: sv.key === 'xuC' && S.team.length < 2,
             desc: sv.key === 'xuC' && S.team.length < 2 ? '徐虫泷太壮，需要队伍已有 2 人才敢动手' : '成功率约 ' + plP + '% · 成功理智 -10，会有反抗' },
           { kind: 'kill', emoji: '🔪', name: '杀害他', cls: 'danger', dis: sv.key === 'xuC' && S.team.length < 2,
@@ -2853,8 +2925,9 @@ canvas{display:block}
           sfx('click');
           addLog('　🚶 你和他对视了两秒，各自转身走开。', 'good');
         } else if (kind === 'recruit') {
-          if (onTeam(sv.key)) { addLog('　他本来就在你队伍里，冲你点了点头。', 'good'); }
-          else if (S.team.length >= TEAM_MAX) { addLog('　队伍已经满了，他摆摆手走了。', 'bad'); }
+          if (hasFeat('lone')) { addLog('　✖ 孤狼：你根本没打算带上任何人，摆手让他走了。', 'bad'); }
+          else if (onTeam(sv.key)) { addLog('　他本来就在你队伍里，冲你点了点头。', 'good'); }
+          else if (S.team.length >= teamMax()) { addLog('　队伍已经满了，他摆摆手走了。', 'bad'); }
           else if (sv.needBag && bagCount() < sv.needBag) { addLog('　他瞟了眼你空荡荡的包，嗤笑一声走了。', 'bad'); }
           else if (Math.random() < recruitChance(sv)) {
             S.team.push(sv.key);
@@ -2940,7 +3013,8 @@ canvas{display:block}
           sfx('hit');
         } else if (kind === 'flee') {
           S.sanity = clampMind(S.sanity - 6);
-          if (Math.random() < 0.28) { var d2 = roll(8, 18); S.hp = clampStat(S.hp - d2); txt = '你转身就跑，在楼道里摔了一跤（生命值 -' + d2 + '，物资没拿到）'; }
+          var fleeBad = 0.28 - (hasFeat('runner') ? 0.05 : 0);   // 跑男：逃跑成功 +5%
+          if (Math.random() < fleeBad) { var d2 = roll(8, 18); S.hp = clampStat(S.hp - d2); txt = '你转身就跑，在楼道里摔了一跤（生命值 -' + d2 + '，物资没拿到）'; }
           else txt = '你屏住呼吸退了出去，什么也没拿到（理智 -6）';
           sfx('click');
         } else {
@@ -2958,11 +3032,18 @@ canvas{display:block}
 
       /* ---------- 入夜与结算 ---------- */
       function endDay() {
-        S.food = clampStat(S.food - FOOD_DROP);
+        var foodDrop = FOOD_DROP + (hasFeat('starve') ? 5 : 0);
+        var mindDrop = hasFeat('optim') ? MIND_DROP_OPTIM : MIND_DROP;
+        S.food = clampStat(S.food - foodDrop);
         S.water = clampStat(S.water - WATER_DROP);
-        S.sanity = clampMind(S.sanity - MIND_DROP);
+        S.sanity = clampMind(S.sanity - mindDrop);
         var lines = ['🌙 第 ' + S.day + ' 天结束了 · ' + NIGHT[rand(NIGHT.length)]];
-        lines.push('饱食度 -' + FOOD_DROP + '，饮水度 -' + WATER_DROP + '，理智值 -' + MIND_DROP);
+        lines.push('饱食度 -' + foodDrop + (hasFeat('starve') ? '（饿死鬼 +5）' : '') +
+          '，饮水度 -' + WATER_DROP + '，理智值 -' + mindDrop + (hasFeat('optim') ? '（乐观主义者 5→2）' : ''));
+        if (hasFeat('drunk') && !S.cigToday) {
+          S.sanity = clampMind(S.sanity - 2);
+          lines.push('🚬 一整天没烟抽，你烦躁得坐不住——理智额外 -2（酒鬼）');
+        }
         if (S.food <= 0) { S.hp = clampStat(S.hp - 8); lines.push('肚子里一点东西都没有了，生命值 -8'); }
         if (S.water <= 0) { S.hp = clampStat(S.hp - 12); lines.push('喉咙干得发疼，生命值 -12'); }
         if (S.food > 30 && S.water > 30 && S.hp < 100) { S.hp = clampStat(S.hp + 3); lines.push('吃饱喝足，睡了个整觉，生命值 +3'); }
@@ -3004,7 +3085,8 @@ canvas{display:block}
         if (S.sanity <= 0) return goMad();
 
         S.day++;
-        S.ap = AP_PER_DAY;
+        S.ap = apPerDay();
+        S.cigToday = false;   // 新的一天，酒鬼的烟重新算
         addLog('—— 第 ' + S.day + ' 天 ——', 'dim');
 
         // 只记一笔，不打断、不结算：这个游戏没有终点
@@ -3029,7 +3111,7 @@ canvas{display:block}
           sub: reason + '<br>一共活了 <b>' + S.day + ' 天</b>' +
                '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 背包 ' + bagCount() + ' 件 · 队伍 ' + S.team.length + ' 人</span>',
           againText: '再来一次',
-          onRestart: reset
+          onRestart: function () { showSetup(); }
         });
       }
       function goMad() {
@@ -3045,7 +3127,7 @@ canvas{display:block}
                '<br>撑到了第 <b>' + S.day + ' 天</b>' +
                '<br><span style="color:#8a93ab;font-size:12.5px">理智上限 ' + S.maxMind + ' · 队伍 ' + S.team.length + ' 人</span>',
           againText: '再来一次',
-          onRestart: reset
+          onRestart: function () { showSetup(); }
         });
       }
       function restAction() {
@@ -3062,18 +3144,94 @@ canvas{display:block}
       }
 
       /* ---------- 初始化 ---------- */
-      function reset() {
-        S = { day: 1, ap: AP_PER_DAY, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, weapon: 0, bag: {}, team: [] };
+      function reset(feats) {
+        // feats 先落，apPerDay()/teamMax() 依赖它
+        S = { day: 1, ap: 0, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, weapon: 0, bag: {}, team: [], feats: feats || {}, cigToday: false };
+        S.ap = apPerDay();
         over = false; pending = null;
         logEl.textContent = '';
+        var featsOn = TRAITS.filter(function (t) { return S.feats[t.key]; });
         addLog('🧟 <b>末世第 1 天</b>。你叫章哲凡，醒来时宿舍楼已经空了。', 'night');
         addLog('手机没信号，楼道里有拖沓的脚步声。你摸了摸口袋——什么都没有。');
-        addLog('活下去。每天只有 <b>3 点行动点</b>，搜到的东西进背包，遇到活人可以拉进队伍。');
+        addLog('活下去。每天只有 <b>' + apPerDay() + ' 点行动点</b>，搜到的东西进背包，遇到活人可以拉进队伍。');
+        if (featsOn.length) {
+          addLog('🧬 你带着这些特性醒来：' + featsOn.map(function (t) {
+            return '<b>' + t.n + '</b>（' + (t.good ? '好' : '坏') + '）';
+          }).join('、'), 'night');
+        }
         renderBag();
         renderMates();
+        renderFeats();
         showPlaces();
         paint();
       }
+      function renderFeats() {
+        featsEl.textContent = '';
+        var on = TRAITS.filter(function (t) { return S.feats[t.key]; });
+        if (!on.length) { featsEl.appendChild(html('<span class="zs-featnone">未选择任何特性</span>')); return; }
+        on.forEach(function (t) {
+          featsEl.appendChild(html('<span class="zs-featchip ' + (t.good ? 'good' : 'bad') + '" title="' + t.d + '">' +
+            (t.good ? '✦ ' : '✖ ') + t.n + '</span>'));
+        });
+      }
+
+      /* ---------- 开局特性选择 ---------- */
+      var setupSel = {}, setupRefresh = null;
+      function showSetup() {
+        setupEl.textContent = '';
+        var wrap = html('<div class="zs-setup-inner">' +
+          '<h3>🧬 开局特性</h3>' +
+          '<p class="zs-setup-tip">坏特性给你<b>特性点</b>，好特性花掉特性点。凑够正数才能用好的——<b>特性点 ≥ 0</b> 才允许开局。</p>' +
+          '<div class="zs-pts">剩余特性点 <b data-pts>0</b></div>' +
+          '<div class="zs-featgroup"><span class="zs-gname bad">坏特性 · 给分</span><div class="zs-featlist" data-bad></div></div>' +
+          '<div class="zs-featgroup"><span class="zs-gname good">好特性 · 花分</span><div class="zs-featlist" data-good></div></div>' +
+          '<button class="zs-gostart" data-gostart>开始游戏</button>' +
+          '</div>');
+        setupEl.appendChild(wrap);
+        var badBox = $('[data-bad]', wrap), goodBox = $('[data-good]', wrap);
+        TRAITS.forEach(function (t) {
+          var c = html('<button class="zs-featcard ' + (t.good ? 'good' : 'bad') + '">' +
+            '<span class="zs-fc-top"><b>' + t.n + '</b><i>' + (t.good ? '-' : '+') + t.pt + '</i></span>' +
+            '<em>' + t.d + '</em></button>');
+          c.__t = t;
+          (t.good ? goodBox : badBox).appendChild(c);
+        });
+        setupRefresh = function () {
+          var pts = traitPoints(setupSel);
+          var pe = $('[data-pts]', wrap);
+          pe.textContent = (pts > 0 ? '+' : '') + pts;
+          pe.className = pts < 0 ? 'neg' : 'ok';
+          [].forEach.call(setupEl.querySelectorAll('.zs-featcard'), function (c) {
+            c.classList.toggle('on', !!setupSel[c.__t.key]);
+          });
+          var go = $('[data-gostart]', wrap);
+          go.disabled = pts < 0;
+          go.textContent = pts < 0 ? '特性点为负，不能开始（还差 ' + (-pts) + ' 点）' : '开始游戏';
+        };
+        setupRefresh();
+        root.querySelector('.zs').classList.add('setup-mode');
+        var hudEl = $('.hud', root);          // 还没开局，顶部状态条先收起来
+        if (hudEl) hudEl.style.display = 'none';
+      }
+      // 只注册一次，避免重开时监听器叠加
+      api.on(setupEl, 'click', function (e) {
+        var c = e.target && e.target.closest ? e.target.closest('.zs-featcard') : null;
+        if (c && c.__t) {
+          var k = c.__t.key;
+          if (setupSel[k]) delete setupSel[k]; else setupSel[k] = true;
+          sfx('click');
+          if (setupRefresh) setupRefresh();
+          return;
+        }
+        var go = e.target && e.target.closest ? e.target.closest('[data-gostart]') : null;
+        if (go && !go.disabled) {
+          sfx('good');
+          root.querySelector('.zs').classList.remove('setup-mode');
+          var hudEl = $('.hud', root);
+          if (hudEl) hudEl.style.display = '';
+          reset(setupSel);
+        }
+      });
       api.on(cardsEl, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('.zs-card') : null;
         if (!b || !b.__it || over || b.classList.contains('dis')) return;
@@ -3101,7 +3259,7 @@ canvas{display:block}
         paint();
         if (S.sanity <= 0) goMad();
       });
-      reset();
+      showSetup();
     }
   };
 
