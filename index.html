@@ -2439,7 +2439,7 @@ canvas{display:block}
     better: 'high', fmt: function (v) { return '存活 ' + v + ' 天'; },
     mount: function (root, api) {
       var AP_PER_DAY = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5;
-      var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25;
+      var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05;
       var TEAM_MAX = 2, MEET_SURVIVOR = 0.045;
       var MILESTONES = [30, 50, 80, 120, 200, 365];
       var WEAPONS = ['空手', '铁棍', '消防斧', '电锯'];
@@ -2477,7 +2477,14 @@ canvas{display:block}
           intro: '一个脖子上挂着链子的家伙，身后没人，但气势像身后站着一队人。' },
         { key: 'xuC', name: '徐虫泷', emoji: '🧑‍🍳', danger: 4, rec: 0.35,
           traits: [{ n: '大力', d: '与僵尸战斗受伤 -10%，5% 概率不受伤' }, { n: '辱凡主义', d: '每天使你理智额外 -1' }],
-          intro: '一个体型壮实的男人，手里拎着半截钢管，看你的眼神像在看一块肉。' }
+          intro: '一个体型壮实的男人，手里拎着半截钢管，看你的眼神像在看一块肉。' },
+        { key: 'tongJ', name: '童建恒', emoji: '🧑‍🦱', danger: 2, rec: 0.45,
+          traits: [{ n: '黑人', d: '使你探索遇到僵尸的概率减少 5%' }, { n: '社交的手腕', d: '每天结束 20% 概率使你生命 -5' }],
+          intro: '一个皮肤黝黑的高个子，靠在墙上嚼着口香糖，看你走近也没动。' },
+        // 特殊：打不过，只能绕开
+        { key: 'chenZ', name: '陈子扬', emoji: '🕴️', danger: 5, rec: 0, unbeatable: true,
+          traits: [{ n: '一只手', d: '招募、掠夺、杀害都会被他一只手打跑（生命 -5）' }],
+          intro: '一个看起来瘦瘦的男人，单手插兜站在路中间。他抬头看了你一眼。' }
       ];
       function svByKey(k) { for (var i = 0; i < SURVIVORS.length; i++) if (SURVIVORS[i].key === k) return SURVIVORS[i]; return null; }
       function onTeam(k) { return S.team.indexOf(k) >= 0; }
@@ -2561,6 +2568,18 @@ canvas{display:block}
         var r = Math.random() * total;
         for (i = 0; i < list.length; i++) { r -= list[i].w; if (r <= 0) return list[i]; }
         return list[list.length - 1];
+      }
+      // 这张掉落表里「僵尸」的权重占比
+      function zombieShare(tb) {
+        var total = 0, z = 0;
+        tb.forEach(function (x) { total += x.w; if (x.t === 'zombie') z += x.w; });
+        return total ? z / total : 0;
+      }
+      // 本次探索遇到僵尸的总概率（尸潮 + 掉落表），童建恒的「黑人」在此基础上 -5 个百分点
+      function zombieChance(place) {
+        var p = threat() + (1 - threat()) * zombieShare(place.table);
+        if (hasTrait('黑人')) p -= ZOMBIE_AVOID;
+        return Math.max(0, p);
       }
       function bagCount() { var n = 0; ITEMS.forEach(function (it) { n += S.bag[it.key] || 0; }); return n; }
       function foodMult() { return 1 - 0.05 * S.team.length; }        // 队友会分掉你的口粮
@@ -2715,12 +2734,12 @@ canvas{display:block}
           var bx = grantItem();
           addLog('　💠 出门前洪传祺塞给你一个「' + bx.emoji + ' ' + bx.name + '」（宝王）', 'good');
         }
-        var forced = Math.random() < threat();
-        var e = forced ? { t: 'zombie' } : pickWeighted(place.table);
-        if (e.t === 'zombie') {
-          var loot = pickWeighted(place.table.filter(function (x) { return x.t !== 'zombie'; }));
+        // 遇僵尸总概率一次算清（含「黑人」减免），再滚一次，避免两段式判定漏算
+        var nonZ = place.table.filter(function (x) { return x.t !== 'zombie'; });
+        if (Math.random() < zombieChance(place)) {
+          var loot = pickWeighted(nonZ);
           pending = { kind: 'zombie', place: place, entry: loot };
-          askEl.textContent = forced
+          askEl.textContent = threat() >= 0.2
             ? '🧟 尸潮涌了过来——跑不掉了，只能应战！'
             : '🧟 货架后面传来拖沓的脚步声——你被发现了！';
           renderCards([
@@ -2732,7 +2751,7 @@ canvas{display:block}
           paint();
           return;
         }
-        applyEntry(e, place);
+        applyEntry(pickWeighted(nonZ), place);
         if (S.hp <= 0) return die('在' + place.name + '流了太多血');
         // 遇到幸存者
         if (Math.random() < MEET_SURVIVOR) return meetSurvivor(place);
@@ -2776,6 +2795,19 @@ canvas{display:block}
         addLog('👤 你在' + place.name + '撞见了 <b>' + sv.name + '</b>。' + sv.intro, 'night');
         addLog('　特质：' + talk, 'dim');
         askEl.innerHTML = '👤 遇到了幸存者 <b>' + sv.name + '</b>——怎么办？';
+        if (sv.unbeatable) {
+          // 陈子扬：三个选项都只会被一只手打跑，没有任何概率成功
+          var warn = '必定打不过——他一只手就能把你拍飞（生命 -5）';
+          renderCards([
+            { kind: 'recruit', emoji: '🤝', name: '招募他', cls: 'danger', desc: warn },
+            { kind: 'plunder', emoji: '👜', name: '掠夺他', cls: 'danger', desc: warn },
+            { kind: 'kill', emoji: '🔪', name: '杀害他', cls: 'danger', desc: warn },
+            { kind: 'ignore', emoji: '🚶', name: '置之不理', desc: '当作没看见，各走各的（唯一安全的选择）', cls: 'go' }
+          ]);
+          sfx('click');
+          paint();
+          return;
+        }
         renderCards([
           { kind: 'recruit', emoji: '🤝', name: '招募他', cls: 'go', dis: !canRec,
             desc: full ? '队伍已满（' + TEAM_MAX + '/' + TEAM_MAX + '）' : (sv.needBag && bagCount() < sv.needBag ? '需要背包物品 > ' + (sv.needBag - 1) + ' 件（现有 ' + bagCount() + '）' : '成功率约 ' + recP + '% · 成功则加入队伍') },
@@ -2789,16 +2821,28 @@ canvas{display:block}
         paint();
       }
       function recruitChance(sv) {
+        if (sv.unbeatable) return 0;          // 陈子扬永远招不到
         var p = sv.rec;
         if (hasTrait('黑帮牢大')) p += 0.12;
         return Math.min(0.9, p);
       }
-      function plunderChance(sv) { return Math.max(0.15, 0.65 - sv.danger * 0.08); }
-      function killChance(sv) { return Math.max(0.15, 0.72 - sv.danger * 0.08); }
+      function plunderChance(sv) { return sv.unbeatable ? 0 : Math.max(0.15, 0.65 - sv.danger * 0.08); }
+      function killChance(sv) { return sv.unbeatable ? 0 : Math.max(0.15, 0.72 - sv.danger * 0.08); }
 
       function resolveSurvivor(kind) {
         var sv = pending.sv, place = pending.place;
         pending = null;
+        // 陈子扬：除了无视，任何动作都只会被一只手打跑
+        if (sv.unbeatable && kind !== 'ignore') {
+          S.hp = clampStat(S.hp - 5);
+          sfx('hit');
+          addLog('　🖐️ 你刚伸出手，陈子扬一只手把你按在了地上。（生命值 -5）', 'bad');
+          addLog('　他甚至没用另一只手——那只手一直插在兜里。', 'dim');
+          if (S.hp <= 0) return die('被陈子扬一只手按倒在了' + place.name);
+          if (S.ap <= 0) return endDay();
+          showPlaces(); paint();
+          return;
+        }
         if (kind === 'ignore') {
           sfx('click');
           addLog('　🚶 你和他对视了两秒，各自转身走开。', 'good');
@@ -2925,6 +2969,10 @@ canvas{display:block}
         if (onTeam('hongC') && Math.random() < 0.30) {
           var stolen = loseRandomItem();
           if (stolen) lines.push('🎒 洪传祺半夜翻了你的包，「' + stolen.emoji + ' ' + stolen.name + '」不见了（顺手牵羊）');
+        }
+        if (onTeam('tongJ') && Math.random() < 0.20) {
+          S.hp = clampStat(S.hp - 5);
+          lines.push('🗣️ 童建恒拉着你聊到半夜，你越听越心累，生命值 -5（社交的手腕）');
         }
         if (S.sanity <= 20) lines.push('你已经很久没跟活人说过话了……');
         addLog(lines.join('<br>'), 'night');
