@@ -2470,7 +2470,7 @@ canvas{display:block}
           traits: [{ n: '老吃家', d: '你物品的饱食效果额外 +15%' }, { n: '辱凡主义', d: '每天使你理智额外 -1' }],
           intro: '一个抱着书本的学生，看见你先是一愣，然后把书举起来挡在脸前。' },
         { key: 'hongC', name: '洪传祺', emoji: '🧑‍🔧', danger: 2, rec: 0.40, needBag: 6,
-          traits: [{ n: '宝王', d: '每次探索 40% 概率额外获得一件物品' }, { n: '顺手牵羊', d: '每天结束 30% 概率从你背包偷走一件' }],
+          traits: [{ n: '宝王', d: '每次探索 20% 概率额外获得一件物品' }, { n: '顺手牵羊', d: '每天结束 30% 概率从你背包偷走一件' }],
           intro: '一个背着鼓鼓囊囊登山包的男人，笑眯眯地看着你，手一直没离开包带。' },
         { key: 'liuK', name: '刘凯豪', emoji: '🧑‍🎤', danger: 3, rec: 0.40,
           traits: [{ n: '黑帮牢大', d: '你的招募成功率提升' }, { n: '怯战', d: '遇僵尸时 10% 概率逃离队伍' }],
@@ -2710,6 +2710,11 @@ canvas{display:block}
         S.ap--;
         sfx('click');
         addLog('<b>第 ' + S.day + ' 天</b> · ' + place.emoji + ' 前往' + place.name + '（剩余 ' + S.ap + ' 点）');
+        // 宝王：每次探索固定滚一次（放在最前面，遇到僵尸的探索也算，保证就是 20%）
+        if (hasTrait('宝王') && Math.random() < 0.20) {
+          var bx = grantItem();
+          addLog('　💠 出门前洪传祺塞给你一个「' + bx.emoji + ' ' + bx.name + '」（宝王）', 'good');
+        }
         var forced = Math.random() < threat();
         var e = forced ? { t: 'zombie' } : pickWeighted(place.table);
         if (e.t === 'zombie') {
@@ -2729,11 +2734,6 @@ canvas{display:block}
         }
         applyEntry(e, place);
         if (S.hp <= 0) return die('在' + place.name + '流了太多血');
-        // 宝王：额外物品
-        if (hasTrait('宝王') && Math.random() < 0.40) {
-          var bx = grantItem();
-          addLog('　💠 洪传祺翻出个「' + bx.emoji + ' ' + bx.name + '」丢给你（宝王）', 'good');
-        }
         // 遇到幸存者
         if (Math.random() < MEET_SURVIVOR) return meetSurvivor(place);
         if (S.ap <= 0) return endDay();
