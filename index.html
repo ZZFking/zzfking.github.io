@@ -2440,7 +2440,7 @@ canvas{display:block}
     mount: function (root, api) {
       var AP_PER_DAY = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5;
       var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05;
-      var TEAM_MAX = 2, MEET_SURVIVOR = 0.045;
+      var TEAM_MAX = 2, MEET_SURVIVOR = 0.045, MEET_BONUS = 0.03;
       var MILESTONES = [30, 50, 80, 120, 200, 365];
       var WEAPONS = ['空手', '铁棍', '消防斧', '电锯'];
 
@@ -2484,7 +2484,11 @@ canvas{display:block}
         // 特殊：打不过，只能绕开
         { key: 'chenZ', name: '陈子扬', emoji: '🕴️', danger: 5, rec: 0, unbeatable: true,
           traits: [{ n: '一只手', d: '招募、掠夺、杀害都会被他一只手打跑（生命 -5）' }],
-          intro: '一个看起来瘦瘦的男人，单手插兜站在路中间。他抬头看了你一眼。' }
+          intro: '一个看起来瘦瘦的男人，单手插兜站在路中间。他抬头看了你一眼。' },
+        { key: 'yangM', name: '杨铭远', emoji: '🧑‍🎤', danger: 2, rec: 0.45,
+          traits: [{ n: '女装', d: '使你探索遇到幸存者的概率提高 3%' },
+                   { n: '近亲产物', d: '每天使你理智额外 -1，且每日结束 5% 概率使一名队友离队' }],
+          intro: '一个打扮得挺讲究的人，远远就朝你招手，笑起来没什么攻击性。' }
       ];
       function svByKey(k) { for (var i = 0; i < SURVIVORS.length; i++) if (SURVIVORS[i].key === k) return SURVIVORS[i]; return null; }
       function onTeam(k) { return S.team.indexOf(k) >= 0; }
@@ -2734,6 +2738,10 @@ canvas{display:block}
           var bx = grantItem();
           addLog('　💠 出门前洪传祺塞给你一个「' + bx.emoji + ' ' + bx.name + '」（宝王）', 'good');
         }
+        // 遇到幸存者：先判定（杨铭远的「女装」+3 个百分点）
+        // 放在僵尸判定之前，否则遇僵尸的探索会跳过这里，实际概率被压低
+        var meetP = MEET_SURVIVOR + (hasTrait('女装') ? MEET_BONUS : 0);
+        if (Math.random() < meetP) return meetSurvivor(place);
         // 遇僵尸总概率一次算清（含「黑人」减免），再滚一次，避免两段式判定漏算
         var nonZ = place.table.filter(function (x) { return x.t !== 'zombie'; });
         if (Math.random() < zombieChance(place)) {
@@ -2753,8 +2761,6 @@ canvas{display:block}
         }
         applyEntry(pickWeighted(nonZ), place);
         if (S.hp <= 0) return die('在' + place.name + '流了太多血');
-        // 遇到幸存者
-        if (Math.random() < MEET_SURVIVOR) return meetSurvivor(place);
         if (S.ap <= 0) return endDay();
         showPlaces();
         paint();
@@ -2960,11 +2966,27 @@ canvas{display:block}
         if (S.food <= 0) { S.hp = clampStat(S.hp - 8); lines.push('肚子里一点东西都没有了，生命值 -8'); }
         if (S.water <= 0) { S.hp = clampStat(S.hp - 12); lines.push('喉咙干得发疼，生命值 -12'); }
         if (S.food > 30 && S.water > 30 && S.hp < 100) { S.hp = clampStat(S.hp + 3); lines.push('吃饱喝足，睡了个整觉，生命值 +3'); }
-        // 队友的每日影响
-        var haters = S.team.filter(function (k) { return k === 'liuX' || k === 'xuC'; });
-        if (haters.length) {
-          S.sanity = clampMind(S.sanity - haters.length);
-          lines.push(haters.map(function (k) { return svByKey(k).name; }).join('、') + ' 又在你耳边念叨凡哥——理智额外 -' + haters.length + '（辱凡主义）');
+        // 队友的每日影响：按特质驱动，新增角色不用再改这里
+        var drains = [];
+        S.team.forEach(function (k) {
+          var svk = svByKey(k);
+          svk.traits.forEach(function (t) {
+            if (t.n === '辱凡主义' || t.n === '近亲产物') drains.push({ name: svk.name, trait: t.n });
+          });
+        });
+        if (drains.length) {
+          S.sanity = clampMind(S.sanity - drains.length);
+          lines.push(drains.map(function (d) { return d.name + ' 的「' + d.trait + '」'; }).join('、') +
+            ' 让你心里发闷——理智额外 -' + drains.length);
+        }
+        if (onTeam('yangM') && Math.random() < 0.05) {
+          var others = S.team.filter(function (k) { return k !== 'yangM'; });
+          if (others.length) {
+            var gone = others[rand(others.length)];
+            S.team.splice(S.team.indexOf(gone), 1);
+            lines.push('🚪 杨铭远和 ' + svByKey(gone).name + ' 吵了一架，' + svByKey(gone).name + ' 连夜走了（近亲产物）');
+            renderMates();
+          }
         }
         if (onTeam('hongC') && Math.random() < 0.30) {
           var stolen = loseRandomItem();
