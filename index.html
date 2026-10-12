@@ -374,6 +374,21 @@ canvas{display:block}
 .zs-bar.k-mind i u{background:linear-gradient(90deg,#a855f7,#e879f9)}
 .zs-bar.low{border-color:rgba(244,63,94,.5)}
 .zs-bar.low b{color:#fb7185}
+/* 背包 */
+.zs-bag{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.26);padding:11px 12px}
+.zs-bag h4{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:12px;color:var(--dim);letter-spacing:.6px;margin-bottom:9px;font-weight:600}
+.zs-bag h4 em{font-style:normal;font-size:11px;color:#6d768c}
+.zs-items{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.zs-item{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:12px;cursor:pointer;text-align:left;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);transition:transform .15s,border-color .15s,background .15s;color:var(--text)}
+.zs-item:hover{transform:translateY(-2px);border-color:rgba(34,211,167,.55);background:rgba(34,211,167,.11)}
+.zs-item:active{transform:none}
+.zs-item .zs-iemoji{font-size:18px;line-height:1}
+.zs-item b{font-size:12.5px;font-weight:600}
+.zs-item b i{font-style:normal;color:var(--o);font-weight:800}
+.zs-item em{font-style:normal;font-size:10.5px;color:var(--dim);line-height:1.4}
+.zs-empty{grid-column:1/-1;font-size:12px;color:#6d768c;text-align:center;padding:7px 0;margin:0}
 .zs-log{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.36);padding:12px 14px;
   height:166px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
 .zs-log::-webkit-scrollbar{width:7px}
@@ -403,6 +418,7 @@ canvas{display:block}
 .zs-card em{font-style:normal;font-size:11.5px;color:var(--dim)}
 @media (max-width:640px){
   .zs-bars{grid-template-columns:repeat(2,1fr)}
+  .zs-items{grid-template-columns:repeat(2,1fr)}
   .zs-cards{grid-template-columns:1fr}
   .zs-log{height:140px}
 }
@@ -2387,37 +2403,49 @@ canvas{display:block}
   };
 
   /* =========================================================
-     游戏 10：凡哥丧尸生存（无尽文字生存）
+     游戏 10：凡哥丧尸生存（无尽文字生存 + 背包物品）
      每天 3 点行动点；饱食 -15 / 饮水 -20 / 理智 -5 每天；
      第 10 天起尸潮逐日变密，没有天数上限
      ========================================================= */
   var G_ZOMBIE = {
     id: 'zombie', name: '凡哥丧尸生存', emoji: '🧟', cat: '生存', diff: 3,
-    desc: '末世求生。每天 3 点行动点，出门搜物资、躲丧尸。没有天数上限——活多久，算多久。',
+    desc: '末世求生。每天 3 点行动点，出门搜物资、躲丧尸，搜到的东西进背包随时用。没有天数上限。',
     better: 'high', fmt: function (v) { return '存活 ' + v + ' 天'; },
     mount: function (root, api) {
       var AP_PER_DAY = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5;
-      var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5;
+      var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25;
       var RESCUE_DAYS = [30, 60, 90, 120, 150];
       var WEAPONS = ['空手', '铁棍', '消防斧', '电锯'];
 
+      // 背包物品：wf/wt/wm 为饱食/饮水/理智增减，hp 为生命增减
+      var ITEMS = [
+        { key: 'band', name: '创可贴', emoji: '🩹', w: 26, hp: 3, desc: '生命 +3' },
+        { key: 'pain', name: '止疼药', emoji: '💊', w: 22, hp: 5, desc: '生命 +5' },
+        { key: 'kit', name: '医疗包', emoji: '🧰', w: 10, hp: 10, desc: '生命 +10' },
+        { key: 'calm', name: '镇定剂', emoji: '💉', w: 7, mind: 10, food: -5, water: -5, desc: '理智 +10 · 饱食 -5 · 饮水 -5' },
+        { key: 'cig', name: '香烟', emoji: '🚬', w: 12, mind: 3, hp: -1, desc: '理智 +3 · 生命 -1' },
+        { key: 'can', name: '罐头', emoji: '🥫', w: 18, food: 18, desc: '饱食 +18' },
+        { key: 'bottle', name: '矿泉水', emoji: '🥤', w: 18, water: 16, desc: '饮水 +16' },
+        { key: 'coffee', name: '速溶咖啡', emoji: '☕', w: 10, mind: 6, water: -4, desc: '理智 +6 · 饮水 -4' }
+      ];
+
       var PLACES = [
         { key: 'store', name: '楼下便利店', emoji: '🏪', desc: '货架还没被搬空',
-          table: [{ t: 'food', a: 16, b: 32, w: 40 }, { t: 'water', a: 16, b: 32, w: 36 }, { t: 'meds', a: 1, b: 1, w: 8 }, { t: 'zombie', w: 30 }, { t: 'hurt', a: 5, b: 14, w: 8 }, { t: 'none', w: 6 }] },
+          table: [{ t: 'food', a: 16, b: 32, w: 40 }, { t: 'water', a: 16, b: 32, w: 36 }, { t: 'item', w: 14 }, { t: 'zombie', w: 30 }, { t: 'hurt', a: 5, b: 14, w: 8 }, { t: 'none', w: 6 }] },
         { key: 'hospital', name: '市医院', emoji: '🏥', desc: '药房在三楼，走廊很黑',
-          table: [{ t: 'meds', a: 1, b: 2, w: 46 }, { t: 'food', a: 8, b: 16, w: 12 }, { t: 'zombie', w: 48 }, { t: 'hurt', a: 8, b: 20, w: 12 }, { t: 'none', w: 6 }] },
+          table: [{ t: 'item', w: 52 }, { t: 'food', a: 8, b: 16, w: 12 }, { t: 'zombie', w: 48 }, { t: 'hurt', a: 8, b: 20, w: 12 }, { t: 'none', w: 6 }] },
         { key: 'school', name: '第七中学', emoji: '🏫', desc: '你的母校，小卖部还在',
-          table: [{ t: 'food', a: 12, b: 26, w: 30 }, { t: 'water', a: 12, b: 26, w: 26 }, { t: 'sanity', a: 8, b: 16, w: 18 }, { t: 'zombie', w: 24 }, { t: 'none', w: 10 }] },
+          table: [{ t: 'food', a: 12, b: 26, w: 30 }, { t: 'water', a: 12, b: 26, w: 26 }, { t: 'sanity', a: 8, b: 16, w: 18 }, { t: 'item', w: 12 }, { t: 'zombie', w: 24 }, { t: 'none', w: 8 }] },
         { key: 'gas', name: '城东加油站', emoji: '⛽', desc: '工具箱也许还在',
-          table: [{ t: 'weapon', a: 1, b: 1, w: 28 }, { t: 'food', a: 8, b: 18, w: 16 }, { t: 'zombie', w: 38 }, { t: 'hurt', a: 6, b: 16, w: 12 }, { t: 'none', w: 12 }] },
+          table: [{ t: 'weapon', a: 1, b: 1, w: 28 }, { t: 'food', a: 8, b: 18, w: 16 }, { t: 'item', w: 12 }, { t: 'zombie', w: 38 }, { t: 'hurt', a: 6, b: 16, w: 12 }, { t: 'none', w: 10 }] },
         { key: 'flat', name: '居民楼', emoji: '🏢', desc: '一橱柜一橱柜地翻，风险小',
-          table: [{ t: 'food', a: 10, b: 22, w: 38 }, { t: 'water', a: 10, b: 22, w: 30 }, { t: 'meds', a: 1, b: 1, w: 8 }, { t: 'zombie', w: 22 }, { t: 'none', w: 10 }] },
+          table: [{ t: 'food', a: 10, b: 22, w: 38 }, { t: 'water', a: 10, b: 22, w: 30 }, { t: 'item', w: 14 }, { t: 'zombie', w: 22 }, { t: 'none', w: 10 }] },
         { key: 'river', name: '城外河边', emoji: '🌊', desc: '水还算干净，视野开阔',
-          table: [{ t: 'water', a: 20, b: 38, w: 48 }, { t: 'sanity', a: 6, b: 14, w: 20 }, { t: 'food', a: 6, b: 14, w: 14 }, { t: 'zombie', w: 14 }, { t: 'none', w: 8 }] },
+          table: [{ t: 'water', a: 20, b: 38, w: 48 }, { t: 'sanity', a: 6, b: 14, w: 20 }, { t: 'food', a: 6, b: 14, w: 14 }, { t: 'item', w: 8 }, { t: 'zombie', w: 14 }, { t: 'none', w: 8 }] },
         { key: 'radio', name: '广播站', emoji: '📻', desc: '也许能收到救援信号',
-          table: [{ t: 'sanity', a: 10, b: 20, w: 40 }, { t: 'meds', a: 1, b: 1, w: 14 }, { t: 'zombie', w: 26 }, { t: 'hurt', a: 5, b: 12, w: 8 }, { t: 'none', w: 14 }] },
+          table: [{ t: 'sanity', a: 10, b: 20, w: 40 }, { t: 'item', w: 16 }, { t: 'zombie', w: 26 }, { t: 'hurt', a: 5, b: 12, w: 8 }, { t: 'none', w: 12 }] },
         { key: 'police', name: '派出所', emoji: '🚓', desc: '值班室里有家伙',
-          table: [{ t: 'weapon', a: 1, b: 1, w: 42 }, { t: 'meds', a: 1, b: 1, w: 14 }, { t: 'zombie', w: 44 }, { t: 'hurt', a: 8, b: 18, w: 14 }, { t: 'none', w: 8 }] }
+          table: [{ t: 'weapon', a: 1, b: 1, w: 42 }, { t: 'item', w: 16 }, { t: 'zombie', w: 44 }, { t: 'hurt', a: 8, b: 18, w: 14 }, { t: 'none', w: 8 }] }
       ];
       var NIGHT = [
         '夜里远处传来零星的枪声。', '你在梦里又回到了教室。', '楼下有东西拖着脚步走了一整夜。',
@@ -2429,7 +2457,7 @@ canvas{display:block}
         '<span class="hud-item">第<b data-day>1</b>天</span>' +
         '<span class="hud-item">行动点<b data-ap>●●●</b></span>' +
         '<span class="hud-item">武器<b data-weapon>空手</b></span>' +
-        '<span class="hud-item">药品<b data-meds>0</b></span>' +
+        '<span class="hud-item">背包<b data-bag>0</b></span>' +
         '<span class="hud-item">尸潮<b data-threat>平静</b></span>' +
         '</div>' +
         '<div class="zs">' +
@@ -2443,14 +2471,17 @@ canvas{display:block}
         '<div class="zs-bar k-water"><span>饮水度</span><b data-water>80</b><i><u data-bw></u></i></div>' +
         '<div class="zs-bar k-mind"><span>理智值</span><b data-sanity>80</b><i><u data-bm></u></i></div>' +
         '</div>' +
+        '<div class="zs-bag"><h4><span>🎒 背包</span><em data-bagtip>点一下就能用</em></h4>' +
+        '<div class="zs-items" data-items></div></div>' +
         '<div class="zs-log" data-log></div>' +
         '<div class="zs-ask" data-ask></div>' +
         '<div class="zs-cards" data-cards></div>' +
-        '<p class="tip">每天 3 点行动点，用光就入夜：饱食度 -15、饮水度 -20、理智值 -5，任一归零会持续掉血/掉理智。第 10 天起尸潮越来越密。生命或理智归零，这一轮就结束。</p>' +
+        '<p class="tip">每天 3 点行动点，用光就入夜：饱食度 -15、饮水度 -20、理智值 -5，任一归零会持续掉血/掉理智。搜刮时有概率翻到物品，进背包后随时可用、不消耗行动点。第 10 天起尸潮越来越密。</p>' +
         '</div>';
 
       var S, over, pending, rescueOffered;
       var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
+      var itemsEl = $('[data-items]', root);
 
       function clampStat(v) { return Math.max(0, Math.min(100, Math.round(v))); }
       function weaponName() { return WEAPONS[Math.min(WEAPONS.length - 1, S.weapon)]; }
@@ -2460,12 +2491,17 @@ canvas{display:block}
         var t = threat();
         return t <= 0 ? '平静' : t < 0.08 ? '零星' : t < 0.2 ? '渐多' : t < 0.35 ? '危险' : '尸潮';
       }
-      function pickTable(tb) {
+      function pickWeighted(list) {
         var total = 0, i;
-        for (i = 0; i < tb.length; i++) total += tb[i].w;
+        for (i = 0; i < list.length; i++) total += list[i].w;
         var r = Math.random() * total;
-        for (i = 0; i < tb.length; i++) { r -= tb[i].w; if (r <= 0) return tb[i]; }
-        return tb[tb.length - 1];
+        for (i = 0; i < list.length; i++) { r -= list[i].w; if (r <= 0) return list[i]; }
+        return list[list.length - 1];
+      }
+      function bagCount() {
+        var n = 0;
+        ITEMS.forEach(function (it) { n += S.bag[it.key] || 0; });
+        return n;
       }
       function addLog(text, cls) {
         var line = html('<div class="zs-line ' + (cls || '') + '">' + text + '</div>');
@@ -2480,7 +2516,7 @@ canvas{display:block}
         $('[data-day2]', root).textContent = S.day;
         $('[data-ap]', root).textContent = S.ap > 0 ? new Array(S.ap + 1).join('●') + new Array(AP_PER_DAY - S.ap + 1).join('○') : '用完';
         $('[data-weapon]', root).textContent = weaponName();
-        $('[data-meds]', root).textContent = S.meds;
+        $('[data-bag]', root).textContent = bagCount();
         $('[data-threat]', root).textContent = threatLabel();
         $('[data-hp]', root).textContent = S.hp;
         $('[data-food]', root).textContent = S.food;
@@ -2494,6 +2530,21 @@ canvas{display:block}
           var el = $('.' + p[0], root);
           if (el) el.classList.toggle('low', p[1] <= 25);
         });
+      }
+      function renderBag() {
+        itemsEl.textContent = '';
+        var any = false;
+        ITEMS.forEach(function (it) {
+          var n = S.bag[it.key] || 0;
+          if (!n) return;
+          any = true;
+          var b = html('<button class="zs-item"><span class="zs-iemoji">' + it.emoji + '</span>' +
+            '<b>' + it.name + ' <i>×' + n + '</i></b><em>' + it.desc + '</em></button>');
+          b.__it = it;
+          itemsEl.appendChild(b);
+        });
+        if (!any) itemsEl.appendChild(html('<p class="zs-empty">背包空着，出门翻翻看。</p>'));
+        $('[data-bagtip]', root).textContent = any ? '点一下就能用（不耗行动点）' : '';
       }
       function renderCards(items) {
         cardsEl.textContent = '';
@@ -2512,13 +2563,39 @@ canvas{display:block}
           return { kind: 'place', place: p, emoji: p.emoji, name: p.name, desc: p.desc + ' · 消耗 1 行动点', cls: 'go' };
         });
         items.push({ kind: 'rest', emoji: '🏠', name: '原地休整', desc: '不出门，回理智和体力 · 消耗 1 行动点' });
-        if (S.meds > 0) items.push({ kind: 'med', emoji: '💊', name: '吃一片药（' + S.meds + '）', desc: '生命值 +25 · 不消耗行动点', cls: 'med' });
         renderCards(items);
         if (!over && !pending) {
           askEl.textContent = S.ap > 0
             ? '第 ' + S.day + ' 天 · 还有 ' + S.ap + ' 点行动点，去哪儿？'
             : '第 ' + S.day + ' 天 · 行动点用完了';
         }
+      }
+
+      /* ---------- 物品 ---------- */
+      function grantItem(silent) {
+        var it = pickWeighted(ITEMS);
+        S.bag[it.key] = (S.bag[it.key] || 0) + 1;
+        renderBag();
+        return it;
+      }
+      function useItem(it) {
+        if (over || !S.bag[it.key]) return;
+        if (it.key === 'cig' && S.hp <= 1) {
+          addLog('🚬 你手抖得连烟都点不着，还是先处理一下伤口吧。', 'bad');
+          sfx('click');
+          return;
+        }
+        S.bag[it.key]--;
+        if (!S.bag[it.key]) delete S.bag[it.key];
+        if (it.hp) S.hp = clampStat(S.hp + it.hp);
+        if (it.food) S.food = clampStat(S.food + it.food);
+        if (it.water) S.water = clampStat(S.water + it.water);
+        if (it.mind) S.sanity = clampStat(S.sanity + it.mind);
+        sfx('good');
+        addLog('🎒 你用了「' + it.emoji + ' ' + it.name + '」：' + it.desc, 'good');
+        renderBag();
+        paint();
+        if (S.hp <= 0) die('身体已经撑不住了');
       }
 
       /* ---------- 探索 ---------- */
@@ -2528,9 +2605,9 @@ canvas{display:block}
         sfx('click');
         addLog('<b>第 ' + S.day + ' 天</b> · ' + place.emoji + ' 前往' + place.name + '（剩余 ' + S.ap + ' 点）');
         var forced = Math.random() < threat();
-        var e = forced ? { t: 'zombie' } : pickTable(place.table);
+        var e = forced ? { t: 'zombie' } : pickWeighted(place.table);
         if (e.t === 'zombie') {
-          var loot = pickTable(place.table.filter(function (x) { return x.t !== 'zombie'; }));
+          var loot = pickWeighted(place.table.filter(function (x) { return x.t !== 'zombie'; }));
           pending = { place: place, entry: loot };
           askEl.textContent = forced
             ? '🧟 尸潮涌了过来——跑不掉了，只能应战！'
@@ -2554,12 +2631,16 @@ canvas{display:block}
         var txt;
         if (e.t === 'food') { var f = roll(e.a, e.b); S.food = clampStat(S.food + f); txt = '翻到一些吃的，饱食度 +' + f; }
         else if (e.t === 'water') { var w = roll(e.a, e.b); S.water = clampStat(S.water + w); txt = '找到饮用水，饮水度 +' + w; }
-        else if (e.t === 'meds') { var m = roll(e.a, e.b); S.meds += m; txt = '找到 ' + m + ' 盒药'; }
+        else if (e.t === 'item') { var it = grantItem(); txt = '翻到一个「' + it.emoji + ' ' + it.name + '」，塞进了背包'; }
         else if (e.t === 'weapon') { S.weapon = Math.min(WEAPONS.length - 1, S.weapon + 1); txt = '捡到一件趁手的东西，武器升级为「' + weaponName() + '」'; }
         else if (e.t === 'sanity') { var s = roll(e.a, e.b); S.sanity = clampStat(S.sanity + s); txt = '这儿让你稍微安心了一点，理智值 +' + s; }
         else if (e.t === 'hurt') { var d = roll(e.a, e.b); S.hp = clampStat(S.hp - d); txt = '被碎玻璃划伤了，生命值 -' + d; }
         else txt = '什么也没找到。';
         addLog('　' + place.emoji + ' ' + txt, e.t === 'hurt' ? 'bad' : 'good');
+        if (e.t !== 'hurt' && Math.random() < BONUS_ITEM) {
+          var b = grantItem();
+          addLog('　🎒 角落里还有个「' + b.emoji + ' ' + b.name + '」，也顺手收下了', 'good');
+        }
       }
 
       /* ---------- 遭遇战 ---------- */
@@ -2641,7 +2722,7 @@ canvas{display:block}
           result: 'lose',
           title: '💀 倒下了',
           sub: reason + '<br>一共活了 <b>' + S.day + ' 天</b>' +
-               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 药品 ' + S.meds + ' 盒</span>',
+               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 背包还剩 ' + bagCount() + ' 件东西</span>',
           againText: '再来一次',
           onRestart: reset
         });
@@ -2671,7 +2752,7 @@ canvas{display:block}
           result: 'win',
           title: '🚁 撤离成功',
           sub: '你在末世里撑了 <b>' + S.day + ' 天</b>，等到了救援' +
-               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 生命 ' + S.hp + ' · 理智 ' + S.sanity + '</span>',
+               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 生命 ' + S.hp + ' · 理智 ' + S.sanity + ' · 背包 ' + bagCount() + ' 件</span>',
           againText: '再来一次',
           onRestart: reset
         });
@@ -2688,24 +2769,16 @@ canvas{display:block}
         showPlaces();
         paint();
       }
-      function useMed() {
-        if (over || pending || S.meds <= 0) return;
-        S.meds--;
-        S.hp = clampStat(S.hp + 25);
-        sfx('good');
-        addLog('💊 你吞下一片药，生命值 +25（剩余 ' + S.meds + ' 盒）', 'good');
-        showPlaces();
-        paint();
-      }
 
       /* ---------- 初始化 ---------- */
       function reset() {
-        S = { day: 1, ap: AP_PER_DAY, hp: 100, food: 80, water: 80, sanity: 80, weapon: 0, meds: 0 };
+        S = { day: 1, ap: AP_PER_DAY, hp: 100, food: 80, water: 80, sanity: 80, weapon: 0, bag: {} };
         over = false; pending = null; rescueOffered = {};
         logEl.textContent = '';
         addLog('🧟 <b>末世第 1 天</b>。你叫章哲凡，醒来时宿舍楼已经空了。', 'night');
         addLog('手机没信号，楼道里有拖沓的脚步声。你摸了摸口袋——什么都没有。');
-        addLog('活下去。每天只有 <b>3 点行动点</b>，用在哪里，你自己定。');
+        addLog('活下去。每天只有 <b>3 点行动点</b>，搜到的东西会进背包。');
+        renderBag();
         showPlaces();
         paint();
       }
@@ -2715,10 +2788,13 @@ canvas{display:block}
         var it = b.__it;
         if (it.kind === 'place') explore(it.place);
         else if (it.kind === 'rest') restAction();
-        else if (it.kind === 'med') useMed();
         else if (it.kind === 'fight' || it.kind === 'flee' || it.kind === 'hide') resolveEncounter(it.kind);
         else if (it.kind === 'rescue') rescue();
         else if (it.kind === 'stay') { sfx('click'); addLog('🏠 你摇了摇头，转身下楼。直升机的声音越来越远。', 'bad'); showPlaces(); paint(); }
+      });
+      api.on(itemsEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.zs-item') : null;
+        if (b && b.__it) useItem(b.__it);
       });
       reset();
     }
