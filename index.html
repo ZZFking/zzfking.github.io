@@ -2441,7 +2441,7 @@ canvas{display:block}
       var AP_PER_DAY = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5;
       var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25;
       var TEAM_MAX = 2, MEET_SURVIVOR = 0.045;
-      var RESCUE_DAYS = [30, 60, 90, 120, 150];
+      var MILESTONES = [30, 50, 80, 120, 200, 365];
       var WEAPONS = ['空手', '铁棍', '消防斧', '电锯'];
 
       var ITEMS = [
@@ -2542,7 +2542,7 @@ canvas{display:block}
         '<p class="tip">每天 3 点行动点，用光就入夜：饱食度 -15、饮水度 -20、理智值 -5，任一归零会持续掉血/掉理智。探索时极小概率遇到幸存者，可以招募、掠夺、杀害或无视——抢和杀都有风险，队伍里的人也会吃你的、偷你的。</p>' +
         '</div>';
 
-      var S, over, pending, rescueOffered;
+      var S, over, pending;
       var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
       var itemsEl = $('[data-items]', root), matesEl = $('[data-mates]', root);
 
@@ -2937,17 +2937,10 @@ canvas{display:block}
         S.ap = AP_PER_DAY;
         addLog('—— 第 ' + S.day + ' 天 ——', 'dim');
 
-        if (RESCUE_DAYS.indexOf(S.day) >= 0 && !rescueOffered[S.day]) {
-          rescueOffered[S.day] = true;
-          askEl.textContent = '🚁 天台上传来直升机的声音——救援队看见你了！';
-          renderCards([
-            { kind: 'rescue', emoji: '🚁', name: '登上直升机撤离', desc: '带着 ' + S.day + ' 天的记录结束这一轮（算作生还）', cls: 'go' },
-            { kind: 'stay', emoji: '🏠', name: '留下来继续守', desc: '放弃这次机会，继续往下撑，天数还能更高', cls: 'danger' }
-          ]);
-          addLog('🚁 救援直升机出现在天台上，他们在等你决定。', 'night');
+        // 只记一笔，不打断、不结算：这个游戏没有终点
+        if (MILESTONES.indexOf(S.day) >= 0) {
+          addLog('🎖️ 你在末世里活过了 <b>' + S.day + ' 天</b>。没有人来救你，你也没打算等——继续撑。', 'night');
           sfx('good');
-          paint();
-          return;
         }
         showPlaces();
         paint();
@@ -2985,22 +2978,6 @@ canvas{display:block}
           onRestart: reset
         });
       }
-      function rescue() {
-        over = true; sfx('win');
-        addLog('🚁 <b>你抓住了绳梯，下面全是伸向你的手。</b>', 'night');
-        askEl.textContent = '这一轮结束了';
-        cardsEl.textContent = '';
-        api.submit(S.day);
-        var mates = S.team.length ? S.team.map(function (k) { return svByKey(k).name; }).join('、') : '没有人';
-        api.gameOver({
-          result: 'win',
-          title: '🚁 撤离成功',
-          sub: '你在末世里撑了 <b>' + S.day + ' 天</b>，等到了救援' +
-               '<br><span style="color:#8a93ab;font-size:12.5px">一起上飞机的：' + mates + '</span>',
-          againText: '再来一次',
-          onRestart: reset
-        });
-      }
       function restAction() {
         if (over || pending || S.ap <= 0) return;
         S.ap--;
@@ -3017,7 +2994,7 @@ canvas{display:block}
       /* ---------- 初始化 ---------- */
       function reset() {
         S = { day: 1, ap: AP_PER_DAY, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, weapon: 0, bag: {}, team: [] };
-        over = false; pending = null; rescueOffered = {};
+        over = false; pending = null;
         logEl.textContent = '';
         addLog('🧟 <b>末世第 1 天</b>。你叫章哲凡，醒来时宿舍楼已经空了。', 'night');
         addLog('手机没信号，楼道里有拖沓的脚步声。你摸了摸口袋——什么都没有。');
@@ -3035,8 +3012,6 @@ canvas{display:block}
         else if (it.kind === 'rest') restAction();
         else if (it.kind === 'fight' || it.kind === 'flee' || it.kind === 'hide') resolveEncounter(it.kind);
         else if (it.kind === 'recruit' || it.kind === 'plunder' || it.kind === 'kill' || it.kind === 'ignore') resolveSurvivor(it.kind);
-        else if (it.kind === 'rescue') rescue();
-        else if (it.kind === 'stay') { sfx('click'); addLog('🏠 你摇了摇头，转身下楼。直升机的声音越来越远。', 'bad'); showPlaces(); paint(); }
       });
       api.on(itemsEl, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('.zs-item') : null;
