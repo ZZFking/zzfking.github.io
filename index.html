@@ -397,6 +397,35 @@ canvas{display:block}
 .zs-item b i{font-style:normal;color:var(--o);font-weight:800}
 .zs-item em{font-style:normal;font-size:10.5px;color:var(--dim);line-height:1.4}
 .zs-empty{grid-column:1/-1;font-size:12px;color:#6d768c;text-align:center;padding:7px 0;margin:0}
+/* 丢弃按钮 */
+.zs-item{position:relative}
+.zs-drop{position:absolute;top:6px;right:7px;width:19px;height:19px;line-height:17px;text-align:center;
+  font-size:11px;border-radius:7px;color:#8a93ab;border:1px solid transparent;transition:.15s;opacity:.55}
+.zs-item:hover .zs-drop{opacity:1}
+.zs-drop:hover{color:#fff;background:rgba(244,63,94,.75);border-color:rgba(244,63,94,.9);opacity:1}
+/* 装备 */
+.zs-gear{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.26);padding:11px 12px}
+.zs-gear h4{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:12px;color:var(--dim);letter-spacing:.6px;margin-bottom:9px;font-weight:600}
+.zs-gear h4 em{font-style:normal;font-size:11px;color:#6d768c}
+.zs-gearcur{margin-bottom:9px}
+.zs-gnow,.zs-gitem{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:13px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.zs-gnow{border-left:3px solid rgba(56,189,248,.85);background:rgba(56,189,248,.1)}
+.zs-gitem.on{border-left:3px solid rgba(56,189,248,.85);background:rgba(56,189,248,.08)}
+.zs-gitem{border-left:3px solid rgba(148,163,184,.5)}
+.zs-gemoji{font-size:21px;line-height:1.2;flex:0 0 auto}
+.zs-gbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.zs-gbody b{font-size:13.5px;font-weight:700}
+.zs-gbody em{font-style:normal;font-size:11px;color:var(--dim);line-height:1.5;letter-spacing:.5px}
+.zs-gbody em i{font-style:normal;color:#7dd3fc;font-weight:700}
+.zs-gbtn{flex:0 0 auto;padding:6px 11px;border-radius:10px;cursor:pointer;font-size:11.5px;
+  border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.12);color:#9adcff;transition:.15s}
+.zs-gbtn:hover{background:rgba(56,189,248,.28);color:#fff}
+.zs-gdrop{flex:0 0 auto;width:24px;height:24px;line-height:22px;text-align:center;border-radius:9px;cursor:pointer;
+  font-size:11px;border:1px solid rgba(244,63,94,.35);background:rgba(244,63,94,.1);color:#ffb0bd;transition:.15s}
+.zs-gdrop:hover{background:rgba(244,63,94,.3);color:#fff}
+.zs-gearlist{display:flex;flex-direction:column;gap:8px}
 /* 队伍 */
 .zs-team{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.26);padding:11px 12px}
 .zs-team h4{display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -2483,6 +2512,17 @@ canvas{display:block}
       var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05, ZOMBIE_BOOST = 0.10;
       var TEAM_BASE = 2, MEET_SURVIVOR = 0.045, MEET_BONUS = 0.03;
 
+      // 装备：反抗僵尸时提供成功率加成，每次反抗消耗 1 点耐久
+      var GEARS = [
+        { key: 'broom', name: '扫帚', emoji: '🧹', dur: 1, bonus: 0.03, w: 26 },
+        { key: 'rod', name: '铁棍', emoji: '🦯', dur: 3, bonus: 0.05, w: 24 },
+        { key: 'knife', name: '菜刀', emoji: '🔪', dur: 3, bonus: 0.03, w: 22 },
+        { key: 'axe', name: '消防斧', emoji: '🪓', dur: 5, bonus: 0.08, w: 16 },
+        { key: 'machete', name: '砍刀', emoji: '🗡️', dur: 6, bonus: 0.10, w: 12 }
+      ];
+      function gearByKey(k) { for (var i = 0; i < GEARS.length; i++) if (GEARS[i].key === k) return GEARS[i]; return null; }
+      var GEAR_FIND = 0.07, FIGHT_BASE = 0;   // 徒手反抗成功率 0%（必定挂彩），全靠装备加成
+
       // 开局特性：坏特性给特性点，好特性花特性点，结算 >= 0 才能开局
       var TRAITS = [
         { key: 'drunk', n: '酒鬼', good: false, pt: 1,
@@ -2625,6 +2665,9 @@ canvas{display:block}
         '<div class="zs-feats" data-feats></div>' +
         '<div class="zs-bag"><h4><span>🎒 背包</span><em data-bagtip>点一下就能用</em></h4>' +
         '<div class="zs-items" data-items></div></div>' +
+        '<div class="zs-gear"><h4><span>🛠️ 装备</span><em data-geartip></em></h4>' +
+        '<div class="zs-gearcur" data-gearcur></div>' +
+        '<div class="zs-gearlist" data-gearlist></div></div>' +
         '<div class="zs-log" data-log></div>' +
         '<div class="zs-ask" data-ask></div>' +
         '<div class="zs-cards" data-cards></div>' +
@@ -2635,6 +2678,7 @@ canvas{display:block}
       var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
       var itemsEl = $('[data-items]', root), matesEl = $('[data-mates]', root);
       var setupEl = $('[data-setup]', root), featsEl = $('[data-feats]', root);
+      var gearCurEl = $('[data-gearcur]', root), gearListEl = $('[data-gearlist]', root);
 
       function clampStat(v) { return Math.max(0, Math.min(100, Math.round(v))); }
       function clampMind(v) { return Math.max(0, Math.min(S.maxMind, Math.round(v))); }
@@ -2726,7 +2770,8 @@ canvas{display:block}
             any = true;
             var b = html('<button class="zs-item" data-kind="' + it.kind + '">' +
               '<span class="zs-iemoji">' + it.emoji + '</span>' +
-              '<b>' + it.name + ' <i>×' + n + '</i></b><em>' + it.desc + '</em></button>');
+              '<b>' + it.name + ' <i>×' + n + '</i></b><em>' + it.desc + '</em>' +
+              '<span class="zs-drop" data-drop="' + it.key + '" title="丢弃一个">✕</span></button>');
             b.__it = it;
             itemsEl.appendChild(b);
           });
@@ -2736,8 +2781,83 @@ canvas{display:block}
         if (!any) itemsEl.appendChild(html('<p class="zs-empty">背包空着，出门翻翻看。</p>'));
         $('[data-bagtip]', root).textContent = any ? Object.keys(kinds).join(' · ') + ' · 点一下就能用' : '';
       }
-      function renderCards(items) {
-        cardsEl.textContent = '';
+      /* ---------- 装备 ---------- */
+      function equippedGear() {
+        for (var i = 0; i < S.gears.length; i++) if (S.gears[i].id === S.equippedId) return S.gears[i];
+        return null;
+      }
+      function gearBonus() { var g = equippedGear(); return g ? gearByKey(g.key).bonus : 0; }
+      function durPips(cur, max) {
+        var s = '';
+        for (var i = 0; i < max; i++) s += i < cur ? '●' : '○';
+        return s;
+      }
+      function findGear() {
+        var def = pickWeighted(GEARS);
+        var inst = { id: S.gearSeq++, key: def.key, dur: def.dur };
+        S.gears.push(inst);
+        renderGear();
+        return { inst: inst, def: def };
+      }
+      // 反抗一次消耗 1 点耐久，归零则损坏
+      function wearGear() {
+        var g = equippedGear();
+        if (!g) return null;
+        var def = gearByKey(g.key);
+        g.dur--;
+        if (g.dur <= 0) {
+          S.gears = S.gears.filter(function (x) { return x.id !== g.id; });
+          S.equippedId = null;
+          renderGear();
+          return { def: def, broken: true };
+        }
+        renderGear();
+        return { def: def, broken: false, left: g.dur };
+      }
+      function discardItem(it) {
+        if (over || !S.bag[it.key]) return;
+        S.bag[it.key]--;
+        if (!S.bag[it.key]) delete S.bag[it.key];
+        sfx('click');
+        addLog('🗑️ 你丢掉了「' + it.emoji + ' ' + it.name + '」', 'dim');
+        renderBag();
+        paint();
+      }
+      function renderGear() {
+        var eq = equippedGear();
+        gearCurEl.textContent = '';
+        if (eq) {
+          var d = gearByKey(eq.key);
+          var el = html('<div class="zs-gnow"><span class="zs-gemoji">' + d.emoji + '</span>' +
+            '<div class="zs-gbody"><b>' + d.name + '</b>' +
+            '<em>反抗成功率 <i>+' + Math.round(d.bonus * 100) + '%</i> · 耐久 <i>' + eq.dur + '/' + d.dur + '</i> ' + durPips(eq.dur, d.dur) + '</em></div>' +
+            '<button class="zs-gbtn" data-unequip="1">卸下</button></div>');
+          gearCurEl.appendChild(el);
+        } else {
+          gearCurEl.appendChild(html('<p class="zs-empty">空手。装备能提高与僵尸反抗的成功率。</p>'));
+        }
+        gearListEl.textContent = '';
+        if (!S.gears.length) {
+          gearListEl.appendChild(html('<p class="zs-empty">还没有装备，出门翻翻看。</p>'));
+        } else {
+          S.gears.forEach(function (g) {
+            var d = gearByKey(g.key);
+            var on = g.id === S.equippedId;
+            var el = html('<div class="zs-gitem' + (on ? ' on' : '') + '">' +
+              '<span class="zs-gemoji">' + d.emoji + '</span>' +
+              '<div class="zs-gbody"><b>' + d.name + '</b>' +
+              '<em>反抗成功率 <i>+' + Math.round(d.bonus * 100) + '%</i> · 耐久 <i>' + g.dur + '/' + d.dur + '</i> ' + durPips(g.dur, d.dur) + '</em></div>' +
+              '<button class="zs-gbtn" data-eq="' + g.id + '">' + (on ? '已装备' : '装备') + '</button>' +
+              '<button class="zs-gdrop" data-gdrop="' + g.id + '" title="丢弃">✕</button></div>');
+            gearListEl.appendChild(el);
+          });
+        }
+        var tip = eq ? '反抗成功率 ' + Math.round((FIGHT_BASE + gearByKey(eq.key).bonus) * 100) + '%'
+                      : '徒手反抗必挂彩 · 装备才能提高成功率';
+        $('[data-geartip]', root).textContent = tip;
+      }
+
+      function renderCards(items) {        cardsEl.textContent = '';
         items.forEach(function (it) {
           var b = html('<button class="zs-card' + (it.cls ? ' ' + it.cls : '') + (it.dis ? ' dis' : '') + '">' +
             '<span class="zs-emoji">' + it.emoji + '</span>' +
@@ -2818,6 +2938,12 @@ canvas{display:block}
         if (hasTrait('宝王') && Math.random() < 0.20) {
           var bx = grantItem();
           addLog('　💠 出门前洪传祺塞给你一个「' + bx.emoji + ' ' + bx.name + '」（宝王）', 'good');
+        }
+        // 小概率翻到装备（每次探索固定滚一次，和宝王一样放在最前面）
+        if (Math.random() < GEAR_FIND) {
+          var fg = findGear();
+          addLog('　🛠️ 你翻出了一件装备：「' + fg.def.emoji + ' ' + fg.def.name + '」（耐久 ' + fg.inst.dur +
+            '，反抗成功率 +' + Math.round(fg.def.bonus * 100) + '%）——去装备界面装上', 'good');
         }
         // 遇到幸存者：先判定（杨铭远的「女装」+3 个百分点）
         // 放在僵尸判定之前，否则遇僵尸的探索会跳过这里，实际概率被压低
@@ -3026,18 +3152,34 @@ canvas{display:block}
         }
         var looted = false, txt;
         if (kind === 'fight') {
-          var base = Math.max(3, 20 - S.weapon * 6) * (0.5 + Math.random());
-          if (hasTrait('大力')) {
-            if (Math.random() < 0.05) { base = 0; }
-            else base = base * 0.9;
-          }
-          var dmg = Math.round(base);
+          // 反抗：先算成功率（基础 + 装备加成），再消耗 1 点耐久
+          var eqG = equippedGear();
+          var chance = FIGHT_BASE + (eqG ? gearByKey(eqG.key).bonus : 0);
+          var clean = Math.random() < chance;
+          var worn = wearGear();          // 装备了才消耗耐久
           var mZ = mindLoss(8);
-          S.hp = clampStat(S.hp - dmg);
           S.sanity = clampMind(S.sanity - mZ);
-          looted = true;
-          txt = '你用' + weaponName() + '把它砸倒' + (dmg ? '，手臂被抓出几道口子（生命值 -' + dmg + '，理智 -' + mZ + '）' : '，<b>徐虫泷一把替你挡下（大力）</b>，你毫发无伤（理智 -' + mZ + '）');
-          sfx('hit');
+          var gearNote = worn
+            ? (worn.broken ? '，<b>' + worn.def.name + ' 断了</b>' : '（' + worn.def.name + ' 耐久 -1，剩 ' + worn.left + '）')
+            : '';
+          if (clean) {
+            looted = true;
+            txt = '你抄起' + (eqG ? '<b>' + gearByKey(eqG.key).name + '</b>' : weaponName()) + '一下把它掀翻在地，' +
+              '自己毫发无伤（反抗成功，理智 -' + mZ + '）' + gearNote;
+            sfx('good');
+          } else {
+            var base = Math.max(3, 20 - S.weapon * 6) * (0.5 + Math.random());
+            if (hasTrait('大力')) {
+              if (Math.random() < 0.05) { base = 0; }
+              else base = base * 0.9;
+            }
+            var dmg = Math.round(base);
+            S.hp = clampStat(S.hp - dmg);
+            looted = true;
+            txt = (eqG ? '你挥着<b>' + gearByKey(eqG.key).name + '</b>没能按住它' : '你徒手跟它扭打在一起') +
+              (dmg ? '，手臂被抓出几道口子（反抗失败，生命值 -' + dmg + '，理智 -' + mZ + '）' : '，好在<b>徐虫泷一把替你挡下（大力）</b>（反抗失败，理智 -' + mZ + '）') + gearNote;
+            sfx('hit');
+          }
         } else if (kind === 'flee') {
           var mFl = mindLoss(6);
           S.sanity = clampMind(S.sanity - mFl);
@@ -3175,7 +3317,7 @@ canvas{display:block}
       /* ---------- 初始化 ---------- */
       function reset(feats) {
         // feats 先落，apPerDay()/teamMax() 依赖它
-        S = { day: 1, ap: 0, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, weapon: 0, bag: {}, team: [], feats: feats || {}, cigToday: false };
+        S = { day: 1, ap: 0, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, weapon: 0, bag: {}, team: [], feats: feats || {}, cigToday: false, gears: [], equippedId: null, gearSeq: 1 };
         S.ap = apPerDay();
         over = false; pending = null;
         logEl.textContent = '';
@@ -3190,6 +3332,7 @@ canvas{display:block}
         }
         renderBag();
         renderMates();
+        renderGear();
         renderFeats();
         showPlaces();
         paint();
@@ -3271,8 +3414,52 @@ canvas{display:block}
         else if (it.kind === 'recruit' || it.kind === 'plunder' || it.kind === 'kill' || it.kind === 'ignore') resolveSurvivor(it.kind);
       });
       api.on(itemsEl, 'click', function (e) {
+        var dr = e.target && e.target.closest ? e.target.closest('.zs-drop') : null;
+        if (dr) {
+          var it = null, k = dr.getAttribute('data-drop');
+          for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].key === k) it = ITEMS[i];
+          if (it) discardItem(it);
+          return;
+        }
         var b = e.target && e.target.closest ? e.target.closest('.zs-item') : null;
         if (b && b.__it) useItem(b.__it);
+      });
+      api.on(gearCurEl, 'click', function (e) {
+        var u = e.target && e.target.closest ? e.target.closest('[data-unequip]') : null;
+        if (!u || over) return;
+        var g = equippedGear();
+        if (!g) return;
+        S.equippedId = null;
+        sfx('click');
+        addLog('🛠️ 你卸下了「' + gearByKey(g.key).name + '」', 'dim');
+        renderGear();
+      });
+      api.on(gearListEl, 'click', function (e) {
+        if (over) return;
+        var d = e.target && e.target.closest ? e.target.closest('[data-gdrop]') : null;
+        if (d) {
+          var gid = Number(d.getAttribute('data-gdrop'));
+          var gone = null;
+          S.gears = S.gears.filter(function (x) { if (x.id === gid) { gone = x; return false; } return true; });
+          if (gone) {
+            if (S.equippedId === gid) S.equippedId = null;
+            sfx('click');
+            addLog('🗑️ 你丢掉了「' + gearByKey(gone.key).name + '」', 'dim');
+            renderGear();
+          }
+          return;
+        }
+        var b = e.target && e.target.closest ? e.target.closest('[data-eq]') : null;
+        if (!b) return;
+        var id = Number(b.getAttribute('data-eq'));
+        var found = null;
+        S.gears.forEach(function (x) { if (x.id === id) found = x; });
+        if (!found) return;
+        S.equippedId = (S.equippedId === id) ? null : id;
+        sfx('good');
+        addLog(S.equippedId ? '🛠️ 你装备了「' + gearByKey(found.key).name + '」（反抗成功率 +' + Math.round(gearByKey(found.key).bonus * 100) + '%）'
+                            : '🛠️ 你收起了「' + gearByKey(found.key).name + '」', 'good');
+        renderGear();
       });
       api.on(matesEl, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('.zs-kick') : null;
