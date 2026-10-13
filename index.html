@@ -2543,7 +2543,7 @@ canvas{display:block}
       // 幸存者：danger 越高越难抢/越难杀，反抗伤害越大
       var SURVIVORS = [
         { key: 'liuX', name: '刘絮飞扬', emoji: '🧑‍🎓', danger: 1, rec: 0.45,
-          traits: [{ n: '老吃家', d: '你物品的饱食效果额外 +15%' }, { n: '辱凡主义', d: '每天使你理智额外 -1' }],
+          traits: [{ n: '老吃家', d: '你物品的饱食效果额外 +20%' }, { n: '辱凡主义', d: '每天使你理智额外 -1' }],
           intro: '一个抱着书本的学生，看见你先是一愣，然后把书举起来挡在脸前。' },
         { key: 'hongC', name: '洪传祺', emoji: '🧑‍🔧', danger: 2, rec: 0.40, needBag: 6,
           traits: [{ n: '宝王', d: '每次探索 20% 概率额外获得一件物品' }, { n: '顺手牵羊', d: '每天结束 30% 概率从你背包偷走一件' }],
@@ -2778,10 +2778,10 @@ canvas{display:block}
         renderBag();
         return it;
       }
-      // 老吃家：物品的饱食效果 +15%
+      // 老吃家：物品的饱食效果 +20%（向上取整，永远不吃亏）
       function itemFoodValue(it) {
         var v = it.food || 0;
-        if (v > 0 && hasTrait('老吃家')) v = Math.round(v * 1.15);
+        if (v > 0 && hasTrait('老吃家')) v = Math.ceil(v * 1.20);
         return v;
       }
       function useItem(it) {
