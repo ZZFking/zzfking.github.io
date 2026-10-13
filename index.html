@@ -2498,7 +2498,7 @@ canvas{display:block}
         { key: 'night', n: '晚上没事瞎溜达凡', good: true, pt: 2,
           d: '你的行动点上限 +1（3 → 4）' },
         { key: 'runner', n: '跑男', good: true, pt: 1,
-          d: '你的遭遇战逃跑成功概率提升 5%' },
+          d: '你的遭遇战逃跑成功概率提升 20%' },
         { key: 'ghost', n: '鬼脑意淫凡', good: true, pt: 2,
           d: '探索中被坏事件扣理智时，每次少扣 2 点' }
       ];
@@ -3022,7 +3022,7 @@ canvas{display:block}
         } else if (kind === 'flee') {
           var mFl = mindLoss(6);
           S.sanity = clampMind(S.sanity - mFl);
-          var fleeBad = 0.28 - (hasFeat('runner') ? 0.05 : 0);   // 跑男：逃跑成功 +5%
+          var fleeBad = 0.28 - (hasFeat('runner') ? 0.20 : 0);   // 跑男：逃跑成功 +20%
           if (Math.random() < fleeBad) { var d2 = roll(8, 18); S.hp = clampStat(S.hp - d2); txt = '你转身就跑，在楼道里摔了一跤（生命值 -' + d2 + '，物资没拿到，理智 -' + mFl + '）'; }
           else txt = '你屏住呼吸退了出去，什么也没拿到（理智 -' + mFl + '）';
           sfx('click');
