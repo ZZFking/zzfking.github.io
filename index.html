@@ -2512,7 +2512,7 @@ canvas{display:block}
       var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05, ZOMBIE_BOOST = 0.10;
       var TEAM_BASE = 2, MEET_SURVIVOR = 0.045, MEET_BONUS = 0.03;
 
-      // 装备：反抗僵尸时提供成功率加成，每次反抗消耗 1 点耐久
+      // 装备：与僵尸搏斗时提供成功率加成，每次搏斗消耗 1 点耐久
       var GEARS = [
         { key: 'broom', name: '扫帚', emoji: '🧹', dur: 1, bonus: 0.03, w: 26 },
         { key: 'rod', name: '铁棍', emoji: '🦯', dur: 3, bonus: 0.05, w: 24 },
@@ -2521,7 +2521,7 @@ canvas{display:block}
         { key: 'machete', name: '砍刀', emoji: '🗡️', dur: 6, bonus: 0.10, w: 12 }
       ];
       function gearByKey(k) { for (var i = 0; i < GEARS.length; i++) if (GEARS[i].key === k) return GEARS[i]; return null; }
-      var GEAR_FIND = 0.07, FIGHT_BASE = 0;   // 徒手反抗成功率 0%（必定挂彩），全靠装备加成
+      var GEAR_FIND = 0.07, FIGHT_BASE = 0.50;   // 徒手搏斗成功率 50%，赢得物资 / 输则挨打且无物资
 
       // 开局特性：坏特性给特性点，好特性花特性点，结算 >= 0 才能开局
       var TRAITS = [
@@ -2799,7 +2799,7 @@ canvas{display:block}
         renderGear();
         return { inst: inst, def: def };
       }
-      // 反抗一次消耗 1 点耐久，归零则损坏
+      // 搏斗一次消耗 1 点耐久，归零则损坏
       function wearGear() {
         var g = equippedGear();
         if (!g) return null;
@@ -2830,12 +2830,11 @@ canvas{display:block}
           var d = gearByKey(eq.key);
           var el = html('<div class="zs-gnow"><span class="zs-gemoji">' + d.emoji + '</span>' +
             '<div class="zs-gbody"><b>' + d.name + '</b>' +
-            '<em>反抗成功率 <i>+' + Math.round(d.bonus * 100) + '%</i> · 耐久 <i>' + eq.dur + '/' + d.dur + '</i> ' + durPips(eq.dur, d.dur) + '</em></div>' +
+            '<em>与僵尸搏斗的成功率 <i>+' + Math.round(d.bonus * 100) + '%</i> · 耐久 <i>' + eq.dur + '/' + d.dur + '</i> ' + durPips(eq.dur, d.dur) + '</em></div>' +
             '<button class="zs-gbtn" data-unequip="1">卸下</button></div>');
           gearCurEl.appendChild(el);
         } else {
-          gearCurEl.appendChild(html('<p class="zs-empty">空手。装备能提高与僵尸反抗的成功率。</p>'));
-        }
+          gearCurEl.appendChild(html('<p class="zs-empty">空手。装备能提高与僵尸搏斗的成功率。</p>'));        }
         gearListEl.textContent = '';
         if (!S.gears.length) {
           gearListEl.appendChild(html('<p class="zs-empty">还没有装备，出门翻翻看。</p>'));
@@ -2846,14 +2845,14 @@ canvas{display:block}
             var el = html('<div class="zs-gitem' + (on ? ' on' : '') + '">' +
               '<span class="zs-gemoji">' + d.emoji + '</span>' +
               '<div class="zs-gbody"><b>' + d.name + '</b>' +
-              '<em>反抗成功率 <i>+' + Math.round(d.bonus * 100) + '%</i> · 耐久 <i>' + g.dur + '/' + d.dur + '</i> ' + durPips(g.dur, d.dur) + '</em></div>' +
+              '<em>与僵尸搏斗的成功率 <i>+' + Math.round(d.bonus * 100) + '%</i> · 耐久 <i>' + g.dur + '/' + d.dur + '</i> ' + durPips(g.dur, d.dur) + '</em></div>' +
               '<button class="zs-gbtn" data-eq="' + g.id + '">' + (on ? '已装备' : '装备') + '</button>' +
               '<button class="zs-gdrop" data-gdrop="' + g.id + '" title="丢弃">✕</button></div>');
             gearListEl.appendChild(el);
           });
         }
-        var tip = eq ? '反抗成功率 ' + Math.round((FIGHT_BASE + gearByKey(eq.key).bonus) * 100) + '%'
-                      : '徒手反抗必挂彩 · 装备才能提高成功率';
+        var tip = '与僵尸搏斗的成功率 ' + Math.round((FIGHT_BASE + (eq ? gearByKey(eq.key).bonus : 0)) * 100) + '%' +
+          (eq ? '' : '（徒手）');
         $('[data-geartip]', root).textContent = tip;
       }
 
@@ -2943,7 +2942,7 @@ canvas{display:block}
         if (Math.random() < GEAR_FIND) {
           var fg = findGear();
           addLog('　🛠️ 你翻出了一件装备：「' + fg.def.emoji + ' ' + fg.def.name + '」（耐久 ' + fg.inst.dur +
-            '，反抗成功率 +' + Math.round(fg.def.bonus * 100) + '%）——去装备界面装上', 'good');
+            '，与僵尸搏斗的成功率 +' + Math.round(fg.def.bonus * 100) + '%）——去装备界面装上', 'good');
         }
         // 遇到幸存者：先判定（杨铭远的「女装」+3 个百分点）
         // 放在僵尸判定之前，否则遇僵尸的探索会跳过这里，实际概率被压低
@@ -3152,7 +3151,7 @@ canvas{display:block}
         }
         var looted = false, txt;
         if (kind === 'fight') {
-          // 反抗：先算成功率（基础 + 装备加成），再消耗 1 点耐久
+          // 搏斗：先算成功率（基础 + 装备加成），再消耗 1 点耐久
           var eqG = equippedGear();
           var chance = FIGHT_BASE + (eqG ? gearByKey(eqG.key).bonus : 0);
           var clean = Math.random() < chance;
@@ -3164,8 +3163,8 @@ canvas{display:block}
             : '';
           if (clean) {
             looted = true;
-            txt = '你抄起' + (eqG ? '<b>' + gearByKey(eqG.key).name + '</b>' : weaponName()) + '一下把它掀翻在地，' +
-              '自己毫发无伤（反抗成功，理智 -' + mZ + '）' + gearNote;
+            txt = (eqG ? '你抄起<b>' + gearByKey(eqG.key).name + '</b>一下把它掀翻在地' : '你徒手把它掀翻在地') +
+              '，自己毫发无伤，物资到手（搏斗成功，理智 -' + mZ + '）' + gearNote;
             sfx('good');
           } else {
             var base = Math.max(3, 20 - S.weapon * 6) * (0.5 + Math.random());
@@ -3175,9 +3174,9 @@ canvas{display:block}
             }
             var dmg = Math.round(base);
             S.hp = clampStat(S.hp - dmg);
-            looted = true;
-            txt = (eqG ? '你挥着<b>' + gearByKey(eqG.key).name + '</b>没能按住它' : '你徒手跟它扭打在一起') +
-              (dmg ? '，手臂被抓出几道口子（反抗失败，生命值 -' + dmg + '，理智 -' + mZ + '）' : '，好在<b>徐虫泷一把替你挡下（大力）</b>（反抗失败，理智 -' + mZ + '）') + gearNote;
+            looted = false;      // 打输了，物资拿不到
+            txt = (eqG ? '你挥着<b>' + gearByKey(eqG.key).name + '</b>被它扑倒' : '你徒手被它扑倒') +
+              (dmg ? '，手臂被抓出几道口子（搏斗失败，生命值 -' + dmg + '，理智 -' + mZ + '，物资没拿到）' : '，好在<b>徐虫泷一把替你挡下（大力）</b>（搏斗失败，理智 -' + mZ + '，物资没拿到）') + gearNote;
             sfx('hit');
           }
         } else if (kind === 'flee') {
@@ -3457,7 +3456,7 @@ canvas{display:block}
         if (!found) return;
         S.equippedId = (S.equippedId === id) ? null : id;
         sfx('good');
-        addLog(S.equippedId ? '🛠️ 你装备了「' + gearByKey(found.key).name + '」（反抗成功率 +' + Math.round(gearByKey(found.key).bonus * 100) + '%）'
+        addLog(S.equippedId ? '🛠️ 你装备了「' + gearByKey(found.key).name + '」（与僵尸搏斗的成功率 +' + Math.round(gearByKey(found.key).bonus * 100) + '%）'
                             : '🛠️ 你收起了「' + gearByKey(found.key).name + '」', 'good');
         renderGear();
       });
