@@ -2521,7 +2521,7 @@ canvas{display:block}
         { key: 'machete', name: '砍刀', emoji: '🗡️', dur: 6, bonus: 0.10, w: 12 }
       ];
       function gearByKey(k) { for (var i = 0; i < GEARS.length; i++) if (GEARS[i].key === k) return GEARS[i]; return null; }
-      var GEAR_FIND = 0.07, FIGHT_BASE = 0.50;   // 徒手搏斗成功率 50%，赢得物资 / 输则挨打且无物资
+      var GEAR_FIND = 0.07, FIGHT_BASE = 0.70;   // 徒手搏斗成功率 70%，赢得物资 / 输则挨打且无物资
 
       // 开局特性：坏特性给特性点，好特性花特性点，结算 >= 0 才能开局
       var TRAITS = [
@@ -2558,7 +2558,6 @@ canvas{display:block}
         return p;
       }
       var MILESTONES = [30, 50, 80, 120, 200, 365];
-      var WEAPONS = ['空手', '铁棍', '消防斧', '电锯'];
 
       var ITEMS = [
         { key: 'band', kind: '医疗', name: '创可贴', emoji: '🩹', w: 20, hp: 3, desc: '生命 +3' },
@@ -2624,7 +2623,7 @@ canvas{display:block}
         { key: 'school', name: '第七中学', emoji: '🏫', desc: '你的母校，小卖部还在',
           table: [{ t: 'food', a: 12, b: 26, w: 30 }, { t: 'water', a: 12, b: 26, w: 26 }, { t: 'sanity', a: 8, b: 16, w: 18 }, { t: 'item', w: 12 }, { t: 'zombie', w: 24 }, { t: 'none', w: 8 }] },
         { key: 'gas', name: '城东加油站', emoji: '⛽', desc: '工具箱也许还在',
-          table: [{ t: 'weapon', a: 1, b: 1, w: 28 }, { t: 'food', a: 8, b: 18, w: 16 }, { t: 'item', w: 12 }, { t: 'zombie', w: 38 }, { t: 'hurt', a: 6, b: 16, w: 12 }, { t: 'none', w: 10 }] },
+          table: [{ t: 'gear', w: 28 }, { t: 'food', a: 8, b: 18, w: 16 }, { t: 'item', w: 12 }, { t: 'zombie', w: 38 }, { t: 'hurt', a: 6, b: 16, w: 12 }, { t: 'none', w: 10 }] },
         { key: 'flat', name: '居民楼', emoji: '🏢', desc: '一橱柜一橱柜地翻，风险小',
           table: [{ t: 'food', a: 10, b: 22, w: 38 }, { t: 'water', a: 10, b: 22, w: 30 }, { t: 'item', w: 14 }, { t: 'zombie', w: 22 }, { t: 'none', w: 10 }] },
         { key: 'river', name: '城外河边', emoji: '🌊', desc: '水还算干净，视野开阔',
@@ -2632,7 +2631,7 @@ canvas{display:block}
         { key: 'radio', name: '广播站', emoji: '📻', desc: '也许能收到救援信号',
           table: [{ t: 'sanity', a: 10, b: 20, w: 40 }, { t: 'item', w: 16 }, { t: 'zombie', w: 26 }, { t: 'hurt', a: 5, b: 12, w: 8 }, { t: 'none', w: 12 }] },
         { key: 'police', name: '派出所', emoji: '🚓', desc: '值班室里有家伙',
-          table: [{ t: 'weapon', a: 1, b: 1, w: 42 }, { t: 'item', w: 16 }, { t: 'zombie', w: 44 }, { t: 'hurt', a: 8, b: 18, w: 14 }, { t: 'none', w: 8 }] }
+          table: [{ t: 'gear', w: 42 }, { t: 'item', w: 16 }, { t: 'zombie', w: 44 }, { t: 'hurt', a: 8, b: 18, w: 14 }, { t: 'none', w: 8 }] }
       ];
       var NIGHT = [
         '夜里远处传来零星的枪声。', '你在梦里又回到了教室。', '楼下有东西拖着脚步走了一整夜。',
@@ -2643,7 +2642,6 @@ canvas{display:block}
         '<div class="hud">' +
         '<span class="hud-item">第<b data-day>1</b>天</span>' +
         '<span class="hud-item">行动点<b data-ap>●●●</b></span>' +
-        '<span class="hud-item">武器<b data-weapon>空手</b></span>' +
         '<span class="hud-item">背包<b data-bag>0</b></span>' +
         '<span class="hud-item">队伍<b data-team>0/2</b></span>' +
         '<span class="hud-item">尸潮<b data-threat>平静</b></span>' +
@@ -2682,7 +2680,6 @@ canvas{display:block}
 
       function clampStat(v) { return Math.max(0, Math.min(100, Math.round(v))); }
       function clampMind(v) { return Math.max(0, Math.min(S.maxMind, Math.round(v))); }
-      function weaponName() { return WEAPONS[Math.min(WEAPONS.length - 1, S.weapon)]; }
       function roll(a, b) { return a + rand(b - a + 1); }
       function threat() { return Math.min(THREAT_MAX, Math.max(0, (S.day - THREAT_FROM) * THREAT_STEP)); }
       function threatLabel() {
@@ -2723,7 +2720,6 @@ canvas{display:block}
         $('[data-day]', root).textContent = S.day;
         $('[data-day2]', root).textContent = S.day;
         $('[data-ap]', root).textContent = S.ap > 0 ? new Array(S.ap + 1).join('●') + new Array(apPerDay() - S.ap + 1).join('○') : '用完';
-        $('[data-weapon]', root).textContent = weaponName();
         $('[data-bag]', root).textContent = bagCount();
         $('[data-team]', root).textContent = S.team.length + '/' + teamMax();
         $('[data-threat]', root).textContent = threatLabel();
@@ -2957,7 +2953,7 @@ canvas{display:block}
             ? '🧟 尸潮涌了过来——跑不掉了，只能应战！'
             : '🧟 货架后面传来拖沓的脚步声——你被发现了！';
           renderCards([
-            { kind: 'fight', emoji: '🔪', name: '正面搏斗', desc: '用' + weaponName() + '硬上，会挂彩但能带走物资', cls: 'danger' },
+            { kind: 'fight', emoji: '🔪', name: '正面搏斗', desc: '成功率 ' + Math.round((FIGHT_BASE + gearBonus()) * 100) + '%' + (equippedGear() ? '（' + gearByKey(equippedGear().key).name + '）' : '（徒手）') + ' · 赢了拿物资，输了挨打且拿不到', cls: 'danger' },
             { kind: 'flee', emoji: '🏃', name: '转身就跑', desc: '这里的物资不要了，可能摔伤', cls: 'danger' },
             { kind: 'hide', emoji: '🙈', name: '屏住呼吸躲起来', desc: '成败看运气，被咬到很疼' }
           ]);
@@ -2976,7 +2972,7 @@ canvas{display:block}
         if (e.t === 'food') { var f = Math.max(1, Math.round(roll(e.a, e.b) * fm)); S.food = clampStat(S.food + f); txt = '翻到一些吃的，饱食度 +' + f + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : ''); }
         else if (e.t === 'water') { var w = Math.max(1, Math.round(roll(e.a, e.b) * fm)); S.water = clampStat(S.water + w); txt = '找到饮用水，饮水度 +' + w + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : ''); }
         else if (e.t === 'item') { var it = grantItem(); txt = '翻到一个「' + it.emoji + ' ' + it.name + '」，塞进了背包'; }
-        else if (e.t === 'weapon') { S.weapon = Math.min(WEAPONS.length - 1, S.weapon + 1); txt = '捡到一件趁手的东西，武器升级为「' + weaponName() + '」'; }
+        else if (e.t === 'gear') { var fg2 = findGear(); txt = '翻出一件装备「' + fg2.def.emoji + ' ' + fg2.def.name + '」（耐久 ' + fg2.inst.dur + '，与僵尸搏斗的成功率 +' + Math.round(fg2.def.bonus * 100) + '%）'; }
         else if (e.t === 'sanity') { var s = roll(e.a, e.b); S.sanity = clampMind(S.sanity + s); txt = '这儿让你稍微安心了一点，理智值 +' + s; }
         else if (e.t === 'hurt') { var d = roll(e.a, e.b); S.hp = clampStat(S.hp - d); txt = '被碎玻璃划伤了，生命值 -' + d; }
         else txt = '什么也没找到。';
@@ -3167,7 +3163,7 @@ canvas{display:block}
               '，自己毫发无伤，物资到手（搏斗成功，理智 -' + mZ + '）' + gearNote;
             sfx('good');
           } else {
-            var base = Math.max(3, 20 - S.weapon * 6) * (0.5 + Math.random());
+            var base = 20 * (0.5 + Math.random());
             if (hasTrait('大力')) {
               if (Math.random() < 0.05) { base = 0; }
               else base = base * 0.9;
@@ -3279,7 +3275,7 @@ canvas{display:block}
           result: 'lose',
           title: '💀 倒下了',
           sub: reason + '<br>一共活了 <b>' + S.day + ' 天</b>' +
-               '<br><span style="color:#8a93ab;font-size:12.5px">武器 ' + weaponName() + ' · 背包 ' + bagCount() + ' 件 · 队伍 ' + S.team.length + ' 人</span>',
+               '<br><span style="color:#8a93ab;font-size:12.5px">背包 ' + bagCount() + ' 件 · 队伍 ' + S.team.length + ' 人</span>',
           againText: '再来一次',
           onRestart: function () { showSetup(); }
         });
@@ -3316,7 +3312,7 @@ canvas{display:block}
       /* ---------- 初始化 ---------- */
       function reset(feats) {
         // feats 先落，apPerDay()/teamMax() 依赖它
-        S = { day: 1, ap: 0, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, weapon: 0, bag: {}, team: [], feats: feats || {}, cigToday: false, gears: [], equippedId: null, gearSeq: 1 };
+        S = { day: 1, ap: 0, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, bag: {}, team: [], feats: feats || {}, cigToday: false, gears: [], equippedId: null, gearSeq: 1 };
         S.ap = apPerDay();
         over = false; pending = null;
         logEl.textContent = '';
