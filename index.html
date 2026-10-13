@@ -2531,7 +2531,7 @@ canvas{display:block}
         { key: 'machete', name: '砍刀', emoji: '🗡️', dur: 6, bonus: 0.10, w: 12 }
       ];
       function gearByKey(k) { for (var i = 0; i < GEARS.length; i++) if (GEARS[i].key === k) return GEARS[i]; return null; }
-      var GEAR_FIND = 0.07, FIGHT_BASE = 0.70;   // 徒手搏斗成功率 70%，赢得物资 / 输则挨打且无物资
+      var GEAR_FIND = 0.07, FIGHT_BASE = 0.50;   // 徒手搏斗成功率 50%，赢得物资 / 输则挨打且无物资
 
       // 开局特性：坏特性给特性点，好特性花特性点，结算 >= 0 才能开局
       var TRAITS = [
