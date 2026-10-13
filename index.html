@@ -2480,7 +2480,7 @@ canvas{display:block}
     better: 'high', fmt: function (v) { return '存活 ' + v + ' 天'; },
     mount: function (root, api) {
       var AP_BASE = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5, MIND_DROP_OPTIM = 2;
-      var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05;
+      var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05, ZOMBIE_BOOST = 0.10;
       var TEAM_BASE = 2, MEET_SURVIVOR = 0.045, MEET_BONUS = 0.03;
 
       // 开局特性：坏特性给特性点，好特性花特性点，结算 >= 0 才能开局
@@ -2491,6 +2491,8 @@ canvas{display:block}
           d: '你无法招募幸存者' },
         { key: 'starve', n: '饿死鬼', good: false, pt: 1,
           d: '每日结束饱食度额外 -5' },
+        { key: 'arrogant', n: '狂妄自大凡', good: false, pt: 2,
+          d: '遇到僵尸的概率 +10%，躲藏失败的概率 +10%' },
         { key: 'optim', n: '乐观主义者', good: true, pt: 1,
           d: '每日结束减少的理智值从 5 变成 2' },
         { key: 'leader', n: '领导者', good: true, pt: 1,
@@ -2658,7 +2660,8 @@ canvas{display:block}
       function zombieChance(place) {
         var p = threat() + (1 - threat()) * zombieShare(place.table);
         if (hasTrait('黑人')) p -= ZOMBIE_AVOID;
-        return Math.max(0, p);
+        if (hasFeat('arrogant')) p += ZOMBIE_BOOST;   // 狂妄自大凡 +10 个百分点
+        return Math.max(0, Math.min(1, p));
       }
       function bagCount() { var n = 0; ITEMS.forEach(function (it) { n += S.bag[it.key] || 0; }); return n; }
       function foodMult() { return 1 - 0.05 * S.team.length; }        // 队友会分掉你的口粮
@@ -3027,7 +3030,8 @@ canvas{display:block}
           else txt = '你屏住呼吸退了出去，什么也没拿到（理智 -' + mFl + '）';
           sfx('click');
         } else {
-          if (Math.random() < 0.55) { var mH = mindLoss(4); S.sanity = clampMind(S.sanity - mH); looted = true; txt = '它从你面前两米的地方走了过去，你等它走远才敢动（理智 -' + mH + '）'; }
+          var hideOk = 0.55 - (hasFeat('arrogant') ? 0.10 : 0);   // 狂妄自大凡：躲藏成功率 -10%
+          if (Math.random() < hideOk) { var mH = mindLoss(4); S.sanity = clampMind(S.sanity - mH); looted = true; txt = '它从你面前两米的地方走了过去，你等它走远才敢动（理智 -' + mH + '）'; }
           else { var d3 = roll(12, 22); S.hp = clampStat(S.hp - d3); txt = '它闻到了你的味道，一口咬在小臂上（生命值 -' + d3 + '）'; }
           sfx('hit');
         }
