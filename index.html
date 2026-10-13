@@ -2493,6 +2493,8 @@ canvas{display:block}
           d: '每日结束饱食度额外 -5' },
         { key: 'arrogant', n: '狂妄自大凡', good: false, pt: 2,
           d: '遇到僵尸的概率 +10%，躲藏失败的概率 +10%' },
+        { key: 'mercy', n: '圣母心', good: false, pt: 1,
+          d: '你不能掠夺和杀害幸存者' },
         { key: 'optim', n: '乐观主义者', good: true, pt: 1,
           d: '每日结束减少的理智值从 5 变成 2' },
         { key: 'leader', n: '领导者', good: true, pt: 1,
@@ -2882,24 +2884,30 @@ canvas{display:block}
         askEl.innerHTML = '👤 遇到了幸存者 <b>' + sv.name + '</b>——怎么办？';
         if (sv.unbeatable) {
           // 陈子扬：三个选项都只会被一只手打跑，没有任何概率成功
+          var mercy0 = hasFeat('mercy');
           var warn = '必定打不过——他一只手就能把你拍飞（生命 -5）';
           renderCards([
-            { kind: 'recruit', emoji: '🤝', name: '招募他', cls: 'danger', desc: warn },
-            { kind: 'plunder', emoji: '👜', name: '掠夺他', cls: 'danger', desc: warn },
-            { kind: 'kill', emoji: '🔪', name: '杀害他', cls: 'danger', desc: warn },
+            { kind: 'recruit', emoji: '🤝', name: '招募他', cls: 'danger', dis: mercy0,
+              desc: mercy0 ? '圣母心：你无法招募幸存者' : warn },
+            { kind: 'plunder', emoji: '👜', name: '掠夺他', cls: 'danger', dis: mercy0,
+              desc: mercy0 ? '圣母心：你不能掠夺幸存者' : warn },
+            { kind: 'kill', emoji: '🔪', name: '杀害他', cls: 'danger', dis: mercy0,
+              desc: mercy0 ? '圣母心：你不能杀害幸存者' : warn },
             { kind: 'ignore', emoji: '🚶', name: '置之不理', desc: '当作没看见，各走各的（唯一安全的选择）', cls: 'go' }
           ]);
           sfx('click');
           paint();
           return;
         }
+        var noHarm = hasFeat('mercy');
+        var xuNo = sv.key === 'xuC' && S.team.length < 2;
         renderCards([
           { kind: 'recruit', emoji: '🤝', name: '招募他', cls: 'go', dis: !canRec,
             desc: hasFeat('lone') ? '孤狼：你无法招募幸存者' : (full ? '队伍已满（' + teamMax() + '/' + teamMax() + '）' : (sv.needBag && bagCount() < sv.needBag ? '需要背包物品 > ' + (sv.needBag - 1) + ' 件（现有 ' + bagCount() + '）' : '成功率约 ' + recP + '% · 成功则加入队伍')) },
-          { kind: 'plunder', emoji: '👜', name: '掠夺他', cls: 'danger', dis: sv.key === 'xuC' && S.team.length < 2,
-            desc: sv.key === 'xuC' && S.team.length < 2 ? '徐虫泷太壮，需要队伍已有 2 人才敢动手' : '成功率约 ' + plP + '% · 成功理智 -10，会有反抗' },
-          { kind: 'kill', emoji: '🔪', name: '杀害他', cls: 'danger', dis: sv.key === 'xuC' && S.team.length < 2,
-            desc: sv.key === 'xuC' && S.team.length < 2 ? '徐虫泷太壮，需要队伍已有 2 人才敢动手' : '成功率约 ' + klP + '% · 成功理智上限 -15（永久）' },
+          { kind: 'plunder', emoji: '👜', name: '掠夺他', cls: 'danger', dis: noHarm || xuNo,
+            desc: noHarm ? '圣母心：你不能掠夺幸存者' : (xuNo ? '徐虫泷太壮，需要队伍已有 2 人才敢动手' : '成功率约 ' + plP + '% · 成功理智 -10，会有反抗') },
+          { kind: 'kill', emoji: '🔪', name: '杀害他', cls: 'danger', dis: noHarm || xuNo,
+            desc: noHarm ? '圣母心：你不能杀害幸存者' : (xuNo ? '徐虫泷太壮，需要队伍已有 2 人才敢动手' : '成功率约 ' + klP + '% · 成功理智上限 -15（永久）') },
           { kind: 'ignore', emoji: '🚶', name: '置之不理', desc: '当作没看见，各走各的' }
         ]);
         sfx('click');
@@ -2917,6 +2925,14 @@ canvas{display:block}
       function resolveSurvivor(kind) {
         var sv = pending.sv, place = pending.place;
         pending = null;
+        // 圣母心：掠夺与杀害一律不可用（卡片本身也已置灰，这里再兜一层）
+        if (hasFeat('mercy') && (kind === 'plunder' || kind === 'kill')) {
+          sfx('click');
+          addLog('　✖ 圣母心：你举了举手，最后还是放下了。', 'bad');
+          if (S.ap <= 0) return endDay();
+          showPlaces(); paint();
+          return;
+        }
         // 陈子扬：除了无视，任何动作都只会被一只手打跑
         if (sv.unbeatable && kind !== 'ignore') {
           S.hp = clampStat(S.hp - 5);
