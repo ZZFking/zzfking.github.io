@@ -372,7 +372,11 @@ canvas{display:block}
 .zs-tag{font-size:12px;color:var(--dim);letter-spacing:.5px}
 .zs-tag b{color:#fb7185;font-weight:700}
 .zs-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.zs-bar{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:9px 11px;transition:border-color .3s}
+.zs-bar{position:relative;border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:9px 11px;transition:border-color .3s,box-shadow .3s}
+/* 清醒状态：理智 >= 70 时高亮并标注收益 */
+.zs-bar.k-mind.clear{border-color:rgba(167,139,250,.55);box-shadow:0 0 0 1px rgba(167,139,250,.14),0 0 20px rgba(167,139,250,.12)}
+.zs-bar.k-mind.clear::after{content:'清醒 · 搜刮 +18%';position:absolute;top:8px;right:10px;font-size:9.5px;
+  color:#c4b5fd;letter-spacing:.3px;white-space:nowrap}
 .zs-bar span{font-size:11.5px;color:var(--dim)}
 .zs-bar b{display:block;font-size:19px;margin:3px 0 7px;font-variant-numeric:tabular-nums}
 .zs-bar i{display:block;height:5px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
@@ -450,6 +454,22 @@ canvas{display:block}
 .zs-pbody em{font-style:normal;font-size:11px;color:var(--dim);line-height:1.5}
 .zs-pbody em i{font-style:normal;color:#34d399;font-weight:700}
 .zs-pips{flex:0 0 auto;font-size:10px;letter-spacing:1.5px;color:#a78bfa;font-family:ui-monospace,monospace}
+/* 标签页：背包 / 装备 / 熟练度 合并，缩短页面 */
+.zs-tabs{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.26);overflow:hidden}
+.zs-tabbar{display:flex;border-bottom:1px solid var(--line);background:rgba(0,0,0,.22)}
+.zs-tab{flex:1;padding:11px 6px;font-size:12.5px;font-weight:600;color:var(--dim);cursor:pointer;font-family:inherit;
+  border:0;border-bottom:2px solid transparent;background:transparent;transition:color .18s,background .18s,border-color .18s}
+.zs-tab:hover{color:var(--text);background:rgba(255,255,255,.045)}
+.zs-tab.on{color:var(--text);border-bottom-color:var(--o);background:rgba(255,122,24,.08)}
+.zs-tab i{font-style:normal;display:inline-block;min-width:15px;padding:1px 5px;margin-left:5px;border-radius:7px;
+  font-size:10.5px;background:rgba(255,255,255,.12);color:var(--dim)}
+.zs-tab.on i{background:rgba(255,122,24,.28);color:#ffd0ad}
+.zs-panes{padding:11px 12px}
+.zs-pane{display:none}
+.zs-pane.on{display:block;animation:zsFade .2s ease}
+@keyframes zsFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.zs-panehead{font-size:11.5px;color:var(--dim);margin-bottom:9px;min-height:15px}
+.zs-panehead em{font-style:normal}
 .zs-item[data-kind="工具"]{border-left:3px solid rgba(167,139,250,.75)}
 .zs-item[data-kind="工具"]:hover{border-color:rgba(167,139,250,.6);background:rgba(167,139,250,.11)}
 /* 队伍 */
@@ -2536,7 +2556,7 @@ canvas{display:block}
     better: 'high', fmt: function (v) { return '存活 ' + v + ' 天'; },
     mount: function (root, api) {
       var AP_BASE = 3, FOOD_DROP = 15, WATER_DROP = 20, MIND_DROP = 5, MIND_DROP_OPTIM = 2;
-      var THREAT_FROM = 10, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05, ZOMBIE_BOOST = 0.10;
+      var THREAT_FROM = 20, THREAT_STEP = 0.012, THREAT_MAX = 0.5, BONUS_ITEM = 0.25, ZOMBIE_AVOID = 0.05, ZOMBIE_BOOST = 0.10;
       var TEAM_BASE = 2, MEET_SURVIVOR = 0.045, MEET_BONUS = 0.03;
 
       // 装备：反抗僵尸时提供成功率加成，每次反抗消耗 1 点耐久
@@ -2553,6 +2573,9 @@ canvas{display:block}
 
       // 熟练度：0~10，钝器/刃器每点 +1% 搏斗成功率，开锁每点 +10% 开锁成功率
       var PROF_MAX = 10, LOCK_RATE_PER = 0.10, LOCKPICKS_PER_LEVEL = 2, LOCKED_FIND = 0.06;
+      // 「清醒」：理智 >= 70 时搜刮更仔细
+      var CLEAR_MIND = 70, CLEAR_LOOT = 1.18, CLEAR_ITEM = 0.12;
+      function isClear() { return S.sanity >= CLEAR_MIND; }
       var PROF_DEF = [
         { key: 'blunt', name: '钝器', emoji: '🔨', d: '每使用坏一把钝器 +1，每点使钝器搏斗成功率 +1%' },
         { key: 'blade', name: '刃器', emoji: '⚔️', d: '每使用坏一把钝器或刃器 +1，每点使刃器搏斗成功率 +1%' },
@@ -2699,13 +2722,24 @@ canvas{display:block}
         '<div class="zs-team"><h4><span>👥 队伍</span><em data-teamtip>0 / 2</em></h4>' +
         '<div class="zs-mates" data-mates></div></div>' +
         '<div class="zs-feats" data-feats></div>' +
-        '<div class="zs-bag"><h4><span>🎒 背包</span><em data-bagtip>点一下就能用</em></h4>' +
+        '<div class="zs-tabs">' +
+        '<div class="zs-tabbar">' +
+        '<button class="zs-tab on" data-tab="bag">🎒 背包<i data-badge="bag">0</i></button>' +
+        '<button class="zs-tab" data-tab="gear">🛠️ 装备<i data-badge="gear">0</i></button>' +
+        '<button class="zs-tab" data-tab="prof">📈 熟练度</button>' +
+        '</div>' +
+        '<div class="zs-panes">' +
+        '<div class="zs-pane on" data-pane="bag">' +
+        '<div class="zs-panehead"><em data-bagtip>点一下就能用</em></div>' +
         '<div class="zs-items" data-items></div></div>' +
-        '<div class="zs-gear"><h4><span>🛠️ 装备</span><em data-geartip></em></h4>' +
+        '<div class="zs-pane" data-pane="gear">' +
+        '<div class="zs-panehead"><em data-geartip></em></div>' +
         '<div class="zs-gearcur" data-gearcur></div>' +
         '<div class="zs-gearlist" data-gearlist></div></div>' +
-        '<div class="zs-prof"><h4><span>📈 熟练度</span><em data-proftip>上限 10</em></h4>' +
+        '<div class="zs-pane" data-pane="prof">' +
+        '<div class="zs-panehead"><em data-proftip>上限 10</em></div>' +
         '<div class="zs-proflist" data-proflist></div></div>' +
+        '</div></div>' +
         '<div class="zs-log" data-log></div>' +
         '<div class="zs-ask" data-ask></div>' +
         '<div class="zs-cards" data-cards></div>' +
@@ -2713,11 +2747,58 @@ canvas{display:block}
         '</div>';
 
       var S, over, pending;
+      /* ---------- 存档：pending 为空时才存，避免存到一半的遭遇 ---------- */
+      var ZKEY = 'fange-zombie-v1', lastSave = '';
+      function saveRun() {
+        if (!S || over || pending) return;
+        try {
+          var payload = JSON.stringify({ v: 1, S: S });
+          if (payload === lastSave) return;
+          lastSave = payload;
+          localStorage.setItem(ZKEY, payload);
+        } catch (e) {}
+      }
+      function loadRun() {
+        try {
+          var raw = localStorage.getItem(ZKEY);
+          if (!raw) return null;
+          var d = JSON.parse(raw);
+          if (!d || !d.S || typeof d.S.day !== 'number' || d.S.hp <= 0) return null;
+          return d;
+        } catch (e) { return null; }
+      }
+      function clearRun() { try { localStorage.removeItem(ZKEY); } catch (e) {} lastSave = ''; }
+      function resumeRun(d) {
+        S = d.S;
+        // 旧存档兼容：补齐后加的字段
+        if (!S.prof) S.prof = { blunt: 0, blade: 0, lock: 0 };
+        if (typeof S.lockProg !== 'number') S.lockProg = 0;
+        if (!S.gears) S.gears = [];
+        if (!S.feats) S.feats = {};
+        if (!S.team) S.team = [];
+        if (!S.bag) S.bag = {};
+        if (typeof S.gearSeq !== 'number') S.gearSeq = 1;
+        if (typeof S.maxMind !== 'number') S.maxMind = 100;
+        if (typeof S.equippedId !== 'number') S.equippedId = null;
+        over = false; pending = null; S.extraLoot = 0;
+        root.querySelector('.zs').classList.remove('setup-mode');
+        var hudEl = $('.hud', root);
+        if (hudEl) hudEl.style.display = '';
+        logEl.textContent = '';
+        addLog('\uD83D\uDCBE <b>已恢复上次的进度</b> · 第 ' + S.day + ' 天。', 'night');
+        renderBag(); renderMates(); renderGear(); renderProf(); renderFeats();
+        showPlaces(); paint();
+      }
       var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
       var itemsEl = $('[data-items]', root), matesEl = $('[data-mates]', root);
       var setupEl = $('[data-setup]', root), featsEl = $('[data-feats]', root);
       var gearCurEl = $('[data-gearcur]', root), gearListEl = $('[data-gearlist]', root);
       var profListEl = $('[data-proflist]', root);
+      var tabsEl = $('.zs-tabbar', root), panesEl = $('.zs-panes', root);
+      function setTab(k) {
+        [].forEach.call(tabsEl.querySelectorAll('.zs-tab'), function (x) { x.classList.toggle('on', x.getAttribute('data-tab') === k); });
+        [].forEach.call(panesEl.querySelectorAll('.zs-pane'), function (p) { p.classList.toggle('on', p.getAttribute('data-pane') === k); });
+      }
 
       function clampStat(v) { return Math.max(0, Math.min(100, Math.round(v))); }
       function clampMind(v) { return Math.max(0, Math.min(S.maxMind, Math.round(v))); }
@@ -2777,6 +2858,9 @@ canvas{display:block}
           var el = $('.' + p[0], root);
           if (el) el.classList.toggle('low', p[1] <= 25);
         });
+        var se = $('.zs-bar.k-mind', root);
+        if (se) se.classList.toggle('clear', S.sanity >= CLEAR_MIND);
+        saveRun();
       }
       function renderMates() {
         matesEl.textContent = '';
@@ -2816,7 +2900,9 @@ canvas{display:block}
         var kinds = {};
         ITEMS.forEach(function (it) { if (S.bag[it.key]) kinds[it.kind] = 1; });
         if (!any) itemsEl.appendChild(html('<p class="zs-empty">背包空着，出门翻翻看。</p>'));
-        $('[data-bagtip]', root).textContent = any ? Object.keys(kinds).join(' · ') + ' · 点一下就能用' : '';
+        $('[data-bagtip]', root).textContent = any ? Object.keys(kinds).join(' · ') + ' · 点一下就能用' : '空';
+        var bb = $('[data-badge="bag"]', root);
+        if (bb) { var bc = bagCount(); bb.textContent = bc; bb.style.display = bc ? '' : 'none'; }
       }
       /* ---------- 装备 ---------- */
       function equippedGear() {
@@ -2894,6 +2980,8 @@ canvas{display:block}
         var tip = '与僵尸搏斗的成功率 ' + Math.round((FIGHT_BASE + (eq ? gearByKey(eq.key).bonus : 0)) * 100) + '%' +
           (eq ? '' : '（徒手）');
         $('[data-geartip]', root).textContent = tip;
+        var gb = $('[data-badge="gear"]', root);
+        if (gb) { gb.textContent = S.gears.length; gb.style.display = S.gears.length ? '' : 'none'; }
       }
 
       /* ---------- 熟练度 ---------- */
@@ -3154,9 +3242,12 @@ canvas{display:block}
       }
       function applyEntry(e, place) {
         var txt, fm = foodMult();
-        if (e.t === 'food') { var f = Math.max(1, Math.round(roll(e.a, e.b) * fm)); S.food = clampStat(S.food + f); txt = '翻到一些吃的，饱食度 +' + f + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : ''); }
-        else if (e.t === 'water') { var w = Math.max(1, Math.round(roll(e.a, e.b) * fm)); S.water = clampStat(S.water + w); txt = '找到饮用水，饮水度 +' + w + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : ''); }
-        else if (e.t === 'item') { var it = grantItem(); txt = '翻到一个「' + it.emoji + ' ' + it.name + '」，塞进了背包'; }
+        var clr = isClear();
+        var lm = fm * (clr ? CLEAR_LOOT : 1);       // 清醒：搜刮收益 +25%
+        var clrTag = clr ? '（清醒 +18%）' : '';
+        if (e.t === 'food') { var f = Math.max(1, Math.round(roll(e.a, e.b) * lm)); S.food = clampStat(S.food + f); txt = '翻到一些吃的，饱食度 +' + f + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : '') + clrTag; }
+        else if (e.t === 'water') { var w = Math.max(1, Math.round(roll(e.a, e.b) * lm)); S.water = clampStat(S.water + w); txt = '找到饮用水，饮水度 +' + w + (fm < 1 ? '（队伍分掉 ' + Math.round((1 - fm) * 100) + '%）' : '') + clrTag; }
+        else if (e.t === 'item') { var it = grantItem(); txt = '翻到一个「' + it.emoji + ' ' + it.name + '」，塞进了背包' + clrTag; }
         else if (e.t === 'gear') { var fg2 = findGear(); txt = '翻出一件装备「' + fg2.def.emoji + ' ' + fg2.def.name + '」（耐久 ' + fg2.inst.dur + '，与僵尸搏斗的成功率 +' + Math.round(fg2.def.bonus * 100) + '%）'; }
         else if (e.t === 'sanity') { var s = roll(e.a, e.b); S.sanity = clampMind(S.sanity + s); txt = '这儿让你稍微安心了一点，理智值 +' + s; }
         else if (e.t === 'hurt') { var d = roll(e.a, e.b); S.hp = clampStat(S.hp - d); txt = '被碎玻璃划伤了，生命值 -' + d; }
@@ -3165,6 +3256,10 @@ canvas{display:block}
         if (e.t !== 'hurt' && Math.random() < BONUS_ITEM) {
           var b = grantItem();
           addLog('　🎒 角落里还有个「' + b.emoji + ' ' + b.name + '」，也顺手收下了', 'good');
+        }
+        if (clr && e.t !== 'hurt' && Math.random() < CLEAR_ITEM) {   // 清醒：额外发现
+          var cb = grantItem();
+          addLog('　🧠 <b>头脑清醒</b>，你注意到角落里还有个「' + cb.emoji + ' ' + cb.name + '」', 'good');
         }
       }
 
@@ -3332,21 +3427,32 @@ canvas{display:block}
         }
         var looted = false, txt;
         if (kind === 'fight') {
-          // 搏斗：先算成功率（基础 + 装备加成），再消耗 1 点耐久
+          // 搏斗三态：大胜（无损+双倍物资）/ 惨胜（拿物资但挂彩）/ 失败（挨打且空手）
           var eqG = equippedGear();
           var eqDef = eqG ? gearByKey(eqG.key) : null;
           var chance = FIGHT_BASE + (eqDef ? eqDef.bonus : 0) + profBonusOf(eqDef);
-          var clean = Math.random() < chance;
-          var worn = wearGear();          // 装备了才消耗耐久
+          var r = Math.random();
+          var bigWin = r < chance * 0.35;                    // 成功里的 35% 是大胜
+          var clean = !bigWin && r < chance;                 // 其余成功是惨胜
+          var worn = wearGear();                             // 装备了才消耗耐久
           var mZ = mindLoss(8);
           S.sanity = clampMind(S.sanity - mZ);
           var gearNote = worn
             ? (worn.broken ? '，<b>' + worn.def.name + ' 断了</b>' : '（' + worn.def.name + ' 耐久 -1，剩 ' + worn.left + '）')
             : '';
-          if (clean) {
+          var weaponTxt = eqG ? '你抄起<b>' + gearByKey(eqG.key).name + '</b>' : '你徒手';
+          if (bigWin) {
             looted = true;
-            txt = (eqG ? '你抄起<b>' + gearByKey(eqG.key).name + '</b>一下把它掀翻在地' : '你徒手把它掀翻在地') +
-              '，自己毫发无伤，物资到手（搏斗成功，理智 -' + mZ + '）' + gearNote;
+            S.extraLoot = 1;                                 // 额外再滚一次物资
+            txt = weaponTxt + '干净利落地把它掀翻在地，<b>毫发无伤</b>，还多搜出一份物资（<b>大胜</b>，理智 -' + mZ + '）' + gearNote;
+            sfx('good');
+          } else if (clean) {
+            looted = true;
+            var baseP = 20 * (0.5 + Math.random()) * 0.45;    // 惨胜：伤害大幅减轻
+            if (hasTrait('大力')) baseP *= 0.9;
+            var dmgP = Math.round(baseP);
+            S.hp = clampStat(S.hp - dmgP);
+            txt = weaponTxt + '把它摁住了，但自己也挂了彩（<b>惨胜</b>，生命值 -' + dmgP + '，理智 -' + mZ + '，物资照拿）' + gearNote;
             sfx('good');
           } else {
             var base = 20 * (0.5 + Math.random());
@@ -3357,8 +3463,8 @@ canvas{display:block}
             var dmg = Math.round(base);
             S.hp = clampStat(S.hp - dmg);
             looted = false;      // 打输了，物资拿不到
-            txt = (eqG ? '你挥着<b>' + gearByKey(eqG.key).name + '</b>被它扑倒' : '你徒手被它扑倒') +
-              (dmg ? '，手臂被抓出几道口子（搏斗失败，生命值 -' + dmg + '，理智 -' + mZ + '，物资没拿到）' : '，好在<b>徐虫泷一把替你挡下（大力）</b>（搏斗失败，理智 -' + mZ + '，物资没拿到）') + gearNote;
+            txt = weaponTxt + '被它扑倒' +
+              (dmg ? '，手臂被抓出几道口子（<b>搏斗失败</b>，生命值 -' + dmg + '，理智 -' + mZ + '，物资没拿到）' : '，好在<b>徐虫泷一把替你挡下（大力）</b>（搏斗失败，理智 -' + mZ + '，物资没拿到）') + gearNote;
             sfx('hit');
           }
         } else if (kind === 'flee') {
@@ -3376,6 +3482,11 @@ canvas{display:block}
         }
         addLog('　' + place.emoji + ' ' + txt, 'bad');
         if (looted) applyEntry(e, place);
+        if (looted && S.extraLoot) {          // 大胜：额外再滚一次物资
+          S.extraLoot = 0;
+          var nonZ2 = place.table.filter(function (x) { return x.t !== 'zombie'; });
+          applyEntry(pickWeighted(nonZ2), place);
+        }
         if (S.hp <= 0) return die('被丧尸拖倒在了' + place.name);
         if (S.ap <= 0) return endDay();
         showPlaces();
@@ -3452,7 +3563,7 @@ canvas{display:block}
 
       /* ---------- 结局 ---------- */
       function die(reason) {
-        over = true; sfx('lose');
+        over = true; sfx('lose'); clearRun();
         addLog('💀 <b>' + reason + '</b>', 'night');
         askEl.textContent = '这一轮结束了';
         cardsEl.textContent = '';
@@ -3467,7 +3578,7 @@ canvas{display:block}
         });
       }
       function goMad() {
-        over = true; sfx('lose');
+        over = true; sfx('lose'); clearRun();
         addLog('🌀 <b>你再也分不清哪些声音是真的了。</b>', 'night');
         askEl.textContent = '这一轮结束了';
         cardsEl.textContent = '';
@@ -3500,7 +3611,7 @@ canvas{display:block}
         // feats 先落，apPerDay()/teamMax() 依赖它
         S = { day: 1, ap: 0, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, bag: {}, team: [], feats: feats || {}, cigToday: false, gears: [], equippedId: null, gearSeq: 1, prof: { blunt: 0, blade: 0, lock: 0 }, lockProg: 0 };
         S.ap = apPerDay();
-        over = false; pending = null;
+        over = false; pending = null; S.extraLoot = 0; clearRun();
         logEl.textContent = '';
         var featsOn = TRAITS.filter(function (t) { return S.feats[t.key]; });
         addLog('🧟 <b>末世第 1 天</b>。你叫章哲凡，醒来时宿舍楼已经空了。', 'night');
@@ -3608,6 +3719,12 @@ canvas{display:block}
         var b = e.target && e.target.closest ? e.target.closest('.zs-item') : null;
         if (b && b.__it) useItem(b.__it);
       });
+      api.on(tabsEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.zs-tab') : null;
+        if (!b) return;
+        sfx('click');
+        setTab(b.getAttribute('data-tab'));
+      });
       api.on(gearCurEl, 'click', function (e) {
         var u = e.target && e.target.closest ? e.target.closest('[data-unequip]') : null;
         if (!u || over) return;
@@ -3659,7 +3776,8 @@ canvas{display:block}
         paint();
         if (S.sanity <= 0) goMad();
       });
-      showSetup();
+      var saved = loadRun();
+      if (saved) resumeRun(saved); else showSetup();
     }
   };
 
