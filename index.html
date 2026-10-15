@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -471,6 +471,43 @@ canvas{display:block}
 .zs-panehead{font-size:11.5px;color:var(--dim);margin-bottom:9px;min-height:15px}
 .zs-panehead em{font-style:normal}
 /* 伤病状态 */
+/* 车辆 */
+.zs-car{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.28);padding:11px 12px}
+.zs-carhead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:600;margin-bottom:9px}
+.zs-carhead span{color:var(--dim);letter-spacing:.6px}
+.zs-carhead em{font-style:normal;font-size:11px}
+.zs-carhead em.ok{color:#34d399}
+.zs-carhead em.no{color:#fb7185}
+.zs-carbars{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:10px}
+.zs-cbar span{font-size:11px;color:var(--dim)}
+.zs-cbar b{display:block;font-size:15px;margin:2px 0 5px;font-variant-numeric:tabular-nums}
+.zs-cbar i{display:block;height:5px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
+.zs-cbar u{display:block;height:100%;border-radius:999px;text-decoration:none;transition:width .3s}
+.zs-cbar.k-cond u{background:linear-gradient(90deg,#38bdf8,#22d3ee)}
+.zs-cbar.k-fuel u{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.zs-carbtns{display:flex;gap:9px}
+.zs-cbtn{flex:1;padding:8px;border-radius:11px;cursor:pointer;font-size:12px;font-family:inherit;
+  border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.12);color:#9adcff;transition:.15s}
+.zs-cbtn:hover:not(:disabled){background:rgba(56,189,248,.26);color:#fff}
+.zs-cbtn:disabled{opacity:.4;cursor:not-allowed;border-color:var(--line);background:rgba(255,255,255,.04);color:#6d768c}
+/* 合成 */
+.zs-craftlist{display:flex;flex-direction:column;gap:9px}
+.zs-recipe{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:13px;
+  border:1px solid var(--line);border-left:3px solid rgba(148,163,184,.45);background:rgba(255,255,255,.03)}
+.zs-recipe.can{border-left-color:rgba(52,211,153,.85);background:rgba(52,211,153,.06)}
+.zs-remj{font-size:21px;line-height:1.2;flex:0 0 auto}
+.zs-rebody{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.zs-rebody b{font-size:13px;font-weight:700}
+.zs-rebody b i{font-style:normal;color:#34d399;font-size:11px;font-weight:600}
+.zs-rebody em{font-style:normal;font-size:11px;color:var(--dim);line-height:1.5}
+.zs-remats{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.zs-remats span{font-size:10.5px;padding:2px 7px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.zs-remats span.ok{color:#8ff0c8;border-color:rgba(52,211,153,.4)}
+.zs-remats span.no{color:#ffb0bd;border-color:rgba(244,63,94,.4)}
+.zs-rbtn{flex:0 0 auto;padding:7px 13px;border-radius:10px;cursor:pointer;font-size:12px;font-family:inherit;
+  border:1px solid rgba(52,211,153,.5);background:rgba(52,211,153,.15);color:#8ff0c8;transition:.15s}
+.zs-rbtn:hover:not(:disabled){background:rgba(52,211,153,.3);color:#fff}
+.zs-rbtn:disabled{cursor:not-allowed;opacity:.45;border-color:var(--line);background:rgba(255,255,255,.04);color:#6d768c}
 .hud-restart{margin-left:auto;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px;
   color:var(--dim);background:rgba(255,255,255,.04);cursor:pointer;font-family:inherit;transition:.16s;white-space:nowrap}
 .hud-restart:hover{color:#ffb0bd;border-color:rgba(244,63,94,.55);background:rgba(244,63,94,.13)}
@@ -482,7 +519,9 @@ canvas{display:block}
 @keyframes zsPulse{0%,100%{opacity:1}50%{opacity:.62}}
 .hud-item.horde{color:#ffb0bd;border-color:rgba(244,63,94,.5);background:rgba(244,63,94,.12)}
 .zs-item[data-kind="工具"]{border-left:3px solid rgba(167,139,250,.75)}
+.zs-item[data-kind="材料"]{border-left:3px solid rgba(251,191,36,.75)}
 .zs-item[data-kind="工具"]:hover{border-color:rgba(167,139,250,.6);background:rgba(167,139,250,.11)}
+.zs-item[data-kind="材料"]:hover{border-color:rgba(251,191,36,.6);background:rgba(251,191,36,.11)}
 /* 队伍 */
 .zs-team{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.26);padding:11px 12px}
 .zs-team h4{display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -2583,6 +2622,41 @@ canvas{display:block}
       var GEAR_FIND = 0.045, FIGHT_BASE = 0.50;   // 徒手搏斗成功率 50%，赢得物资 / 输则挨打且无物资
 
       // 熟练度：0~10，钝器/刃器每点 +1% 搏斗成功率，开锁每点 +10% 开锁成功率
+      // ---------- 合成 ----------
+      var RECIPES = [
+        { key: 'r_bandage', name: '绷带', emoji: '🩹', out: 'bandage', need: { cloth: 2 },
+          d: '生命 +8，并解除流血' },
+        { key: 'r_splint', name: '夹板', emoji: '🩼', out: 'splint', need: { plank: 1, cloth: 1 },
+          d: '治愈骨折' },
+        { key: 'r_molotov', name: '燃烧瓶', emoji: '🔥', out: 'molotov', need: { beer: 1, cloth: 1 },
+          d: '遭遇战中使用：必定大胜' },
+        { key: 'r_part', name: '汽车零件', emoji: '⚙️', out: 'part', need: { nail: 2, plank: 1 },
+          d: '修理车辆，每个 +30 车况' }
+      ];
+      var MAT_KEYS = { cloth: 1, plank: 1, nail: 1, part: 1, fuel: 1 };
+      function itemByKey(k) { for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].key === k) return ITEMS[i]; return null; }
+      function matPool(place) { return place.mats && place.mats.length ? place.mats : ['cloth']; }
+      function canCraft(r) {
+        for (var k in r.need) if ((S.bag[k] || 0) < r.need[k]) return false;
+        return true;
+      }
+      function doCraft(r) {
+        if (over || pending || S.ap <= 0) return;
+        if (!canCraft(r)) {
+          addLog('🧰 材料不够，做不了「' + r.name + '」。', 'bad');
+          sfx('hit');
+          return;
+        }
+        S.ap--;
+        for (var k in r.need) { S.bag[k] -= r.need[k]; if (!S.bag[k]) delete S.bag[k]; }
+        S.bag[r.out] = (S.bag[r.out] || 0) + 1;
+        sfx('good');
+        addLog('🧰 你花 1 点行动点做出了「' + r.emoji + ' ' + r.name + '」。' + (S.ap > 0 ? '（剩余 ' + S.ap + ' 点）' : ''), 'good');
+        renderBag(); renderCraft();
+        if (S.ap <= 0) return endDay();
+        showPlaces();
+        paint();
+      }
       // ---------- 天气 ----------
       var WEATHERS = [
         { key: 'clear', name: '\u6674', emoji: '\u2600\ufe0f', d: '\u65e0\u5f71\u54cd',
@@ -2682,7 +2756,8 @@ canvas{display:block}
       ];
       function traitByKey(k) { for (var i = 0; i < TRAITS.length; i++) if (TRAITS[i].key === k) return TRAITS[i]; return null; }
       function hasFeat(k) { return !!(S && S.feats && S.feats[k]); }
-      function apPerDay() { return Math.max(1, AP_BASE + (hasFeat('night') ? 1 : 0) - (hasStatus('fracture') ? 1 : 0) - (S.weather === 'storm' ? 1 : 0)); }
+      function carUsable() { return !!(S.car && S.car.cond >= 50 && S.car.fuel > 0); }
+      function apPerDay() { return Math.max(1, AP_BASE + (hasFeat('night') ? 1 : 0) - (hasStatus('fracture') ? 1 : 0) - (S.weather === 'storm' ? 1 : 0) + (carUsable() ? 1 : 0)); }
       function teamMax() { return TEAM_BASE + (hasFeat('leader') ? 1 : 0); }
       // 鬼脑意淫凡：探索途中的坏事件每次少扣 2 点理智（不含入夜结算、物品、驱赶队友）
       function mindLoss(v) { return Math.max(0, v - (hasFeat('ghost') ? 2 : 0)); }
@@ -2712,7 +2787,14 @@ canvas{display:block}
         { key: 'coffee', kind: '饮品', name: '速溶咖啡', emoji: '☕', w: 7, water: -4, mind: 6, desc: '理智 +6 · 饮水 -4' },
         { key: 'calm', kind: '精神', name: '镇定剂', emoji: '💉', w: 6, mind: 10, food: -5, water: -5, desc: '理智 +10 · 饱食 -5 · 饮水 -5' },
         { key: 'cig', kind: '精神', name: '香烟', emoji: '🚬', w: 10, mind: 3, hp: -1, desc: '理智 +3 · 生命 -1' },
-        { key: 'lockpick', kind: '工具', name: '开锁器', emoji: '🔓', w: 14, desc: '撬锁用 · 成功率只由开锁熟练度决定' }
+        { key: 'lockpick', kind: '工具', name: '开锁器', emoji: '🔓', w: 14, desc: '撬锁用 · 成功率只由开锁熟练度决定' },
+        { key: 'cloth', kind: '材料', name: '布条', emoji: '🧵', w: 0, desc: '合成材料 · 居民楼、医院常见' },
+        { key: 'plank', kind: '材料', name: '木板', emoji: '🪵', w: 0, desc: '合成材料 · 居民楼、加油站常见' },
+        { key: 'nail', kind: '材料', name: '钉子', emoji: '🔩', w: 0, desc: '合成材料 · 加油站、派出所有' },
+        { key: 'part', kind: '材料', name: '汽车零件', emoji: '⚙️', w: 0, desc: '修车用 · 每个修 30 车况' },
+        { key: 'fuel', kind: '材料', name: '汽油桶', emoji: '⛽', w: 0, desc: '加油用 · 每桶加 40 油量' },
+        { key: 'bandage', kind: '医疗', name: '绷带', emoji: '🩹', w: 0, hp: 8, desc: '生命 +8 · 止血（合成品）' },
+        { key: 'molotov', kind: '工具', name: '燃烧瓶', emoji: '🔥', w: 0, desc: '遭遇战中使用：必定大胜（合成品）' }
       ];
 
       // 幸存者：danger 越高越难抢/越难杀，反抗伤害越大
@@ -2752,22 +2834,27 @@ canvas{display:block}
       }
 
       var PLACES = [
-        { key: 'store', name: '楼下便利店', emoji: '🏪', desc: '货架还没被搬空',
-          table: [{ t: 'food', a: 16, b: 32, w: 40 }, { t: 'water', a: 16, b: 32, w: 36 }, { t: 'item', w: 14 }, { t: 'zombie', w: 30 }, { t: 'hurt', a: 5, b: 14, w: 8 }, { t: 'none', w: 6 }] },
-        { key: 'hospital', name: '市医院', emoji: '🏥', desc: '药房在三楼，走廊很黑',
-          table: [{ t: 'item', w: 52 }, { t: 'food', a: 8, b: 16, w: 12 }, { t: 'zombie', w: 48 }, { t: 'hurt', a: 8, b: 20, w: 12 }, { t: 'none', w: 6 }] },
-        { key: 'school', name: '第七中学', emoji: '🏫', desc: '你的母校，小卖部还在',
-          table: [{ t: 'food', a: 12, b: 26, w: 30 }, { t: 'water', a: 12, b: 26, w: 26 }, { t: 'sanity', a: 8, b: 16, w: 18 }, { t: 'item', w: 12 }, { t: 'zombie', w: 24 }, { t: 'none', w: 8 }] },
-        { key: 'gas', name: '城东加油站', emoji: '⛽', desc: '工具箱也许还在',
-          table: [{ t: 'gear', w: 16 }, { t: 'food', a: 8, b: 18, w: 16 }, { t: 'item', w: 12 }, { t: 'zombie', w: 38 }, { t: 'hurt', a: 6, b: 16, w: 12 }, { t: 'none', w: 10 }] },
-        { key: 'flat', name: '居民楼', emoji: '🏢', desc: '一橱柜一橱柜地翻，风险小',
-          table: [{ t: 'food', a: 10, b: 22, w: 38 }, { t: 'water', a: 10, b: 22, w: 30 }, { t: 'item', w: 14 }, { t: 'zombie', w: 22 }, { t: 'none', w: 10 }] },
-        { key: 'river', name: '城外河边', emoji: '🌊', desc: '水还算干净，视野开阔',
-          table: [{ t: 'water', a: 20, b: 38, w: 48 }, { t: 'sanity', a: 6, b: 14, w: 20 }, { t: 'food', a: 6, b: 14, w: 14 }, { t: 'item', w: 8 }, { t: 'zombie', w: 14 }, { t: 'none', w: 8 }] },
-        { key: 'radio', name: '广播站', emoji: '📻', desc: '也许能收到救援信号',
-          table: [{ t: 'sanity', a: 10, b: 20, w: 40 }, { t: 'item', w: 16 }, { t: 'zombie', w: 26 }, { t: 'hurt', a: 5, b: 12, w: 8 }, { t: 'none', w: 12 }] },
-        { key: 'police', name: '派出所', emoji: '🚓', desc: '值班室里有家伙',
-          table: [{ t: 'gear', w: 23 }, { t: 'item', w: 16 }, { t: 'zombie', w: 44 }, { t: 'hurt', a: 8, b: 18, w: 14 }, { t: 'none', w: 8 }] }
+        { key: 'store', name: '楼下便利店', emoji: '🏪', desc: '货架还没被搬空', mats: ['cloth', 'plank'],
+          table: [{ t: 'food', a: 16, b: 32, w: 40 }, { t: 'water', a: 16, b: 32, w: 36 }, { t: 'item', w: 14 }, { t: 'mat', w: 12 }, { t: 'zombie', w: 30 }, { t: 'hurt', a: 5, b: 14, w: 8 }, { t: 'none', w: 6 }] },
+        { key: 'hospital', name: '市医院', emoji: '🏥', desc: '药房在三楼，走廊很黑', mats: ['cloth', 'cloth', 'nail'],
+          table: [{ t: 'item', w: 52 }, { t: 'food', a: 8, b: 16, w: 12 }, { t: 'mat', w: 10 }, { t: 'zombie', w: 48 }, { t: 'hurt', a: 8, b: 20, w: 12 }, { t: 'none', w: 6 }] },
+        { key: 'school', name: '第七中学', emoji: '🏫', desc: '你的母校，小卖部还在', mats: ['cloth', 'plank'],
+          table: [{ t: 'food', a: 12, b: 26, w: 30 }, { t: 'water', a: 12, b: 26, w: 26 }, { t: 'sanity', a: 8, b: 16, w: 18 }, { t: 'item', w: 12 }, { t: 'mat', w: 12 }, { t: 'zombie', w: 24 }, { t: 'none', w: 8 }] },
+        { key: 'gas', name: '城东加油站', emoji: '⛽', desc: '工具箱也许还在', mats: ['fuel', 'part', 'nail', 'plank'],
+          table: [{ t: 'gear', w: 16 }, { t: 'food', a: 8, b: 18, w: 16 }, { t: 'item', w: 12 }, { t: 'mat', w: 14 }, { t: 'car', w: 7 }, { t: 'zombie', w: 38 }, { t: 'hurt', a: 6, b: 16, w: 12 }, { t: 'none', w: 10 }] },
+        { key: 'flat', name: '居民楼', emoji: '🏢', desc: '一橱柜一橱柜地翻，风险小', mats: ['cloth', 'plank', 'plank', 'nail'],
+          table: [{ t: 'food', a: 10, b: 22, w: 38 }, { t: 'water', a: 10, b: 22, w: 30 }, { t: 'item', w: 14 }, { t: 'mat', w: 16 }, { t: 'car', w: 6 }, { t: 'zombie', w: 22 }, { t: 'none', w: 10 }] },
+        { key: 'river', name: '城外河边', emoji: '🌊', desc: '水还算干净，视野开阔', mats: ['cloth'],
+          table: [{ t: 'water', a: 20, b: 38, w: 48 }, { t: 'sanity', a: 6, b: 14, w: 20 }, { t: 'food', a: 6, b: 14, w: 14 }, { t: 'item', w: 8 }, { t: 'mat', w: 10 }, { t: 'zombie', w: 14 }, { t: 'none', w: 8 }] },
+        { key: 'radio', name: '广播站', emoji: '📻', desc: '也许能收到救援信号', mats: ['part', 'nail'],
+          table: [{ t: 'sanity', a: 10, b: 20, w: 40 }, { t: 'item', w: 16 }, { t: 'mat', w: 10 }, { t: 'zombie', w: 26 }, { t: 'hurt', a: 5, b: 12, w: 8 }, { t: 'none', w: 12 }] },
+        { key: 'police', name: '派出所', emoji: '🚓', desc: '值班室里有家伙', mats: ['nail', 'part', 'cloth'],
+          table: [{ t: 'gear', w: 23 }, { t: 'item', w: 16 }, { t: 'mat', w: 12 }, { t: 'zombie', w: 44 }, { t: 'hurt', a: 8, b: 18, w: 14 }, { t: 'none', w: 8 }] }
+        ,
+        { key: 'depot', name: '远郊仓库', emoji: '🏭', desc: '开车才到得了，货堆得很高', needCar: true, mats: ['plank', 'part', 'nail'],
+          table: [{ t: 'item', w: 40 }, { t: 'gear', w: 30 }, { t: 'food', a: 14, b: 30, w: 26 }, { t: 'water', a: 14, b: 30, w: 22 }, { t: 'mat', w: 20 }, { t: 'zombie', w: 40 }, { t: 'hurt', a: 6, b: 16, w: 10 }, { t: 'none', w: 6 }] },
+        { key: 'service', name: '高速服务区', emoji: '🛣️', desc: '货架还满着，但人也多', needCar: true, mats: ['fuel', 'part', 'fuel'],
+          table: [{ t: 'food', a: 18, b: 34, w: 36 }, { t: 'water', a: 18, b: 34, w: 30 }, { t: 'item', w: 20 }, { t: 'mat', w: 18 }, { t: 'gear', w: 14 }, { t: 'zombie', w: 46 }, { t: 'none', w: 8 }] }
       ];
       var NIGHT = [
         '夜里远处传来零星的枪声。', '你在梦里又回到了教室。', '楼下有东西拖着脚步走了一整夜。',
@@ -2797,6 +2884,7 @@ canvas{display:block}
         '<div class="zs-bar k-mind"><span>理智值</span><b data-sanity>80<em data-mindcap></em></b><i><u data-bm></u></i></div>' +
         '</div>' +
         '<div class="zs-status" data-status></div>' +
+        '<div class="zs-car" data-car style="display:none"></div>' +
         '<div class="zs-team"><h4><span>👥 队伍</span><em data-teamtip>0 / 2</em></h4>' +
         '<div class="zs-mates" data-mates></div></div>' +
         '<div class="zs-feats" data-feats></div>' +
@@ -2805,6 +2893,7 @@ canvas{display:block}
         '<button class="zs-tab on" data-tab="bag">🎒 背包<i data-badge="bag">0</i></button>' +
         '<button class="zs-tab" data-tab="gear">🛠️ 装备<i data-badge="gear">0</i></button>' +
         '<button class="zs-tab" data-tab="prof">📈 熟练度</button>' +
+        '<button class="zs-tab" data-tab="craft">🧰 合成<i data-badge="craft">0</i></button>' +
         '</div>' +
         '<div class="zs-panes">' +
         '<div class="zs-pane on" data-pane="bag">' +
@@ -2817,6 +2906,9 @@ canvas{display:block}
         '<div class="zs-pane" data-pane="prof">' +
         '<div class="zs-panehead"><em data-proftip>上限 10</em></div>' +
         '<div class="zs-proflist" data-proflist></div></div>' +
+        '<div class="zs-pane" data-pane="craft">' +
+        '<div class="zs-panehead"><em data-crafttip>每次合成消耗 1 行动点</em></div>' +
+        '<div class="zs-craftlist" data-craftlist></div></div>' +
         '</div></div>' +
         '<div class="zs-log" data-log></div>' +
         '<div class="zs-ask" data-ask></div>' +
@@ -2864,16 +2956,18 @@ canvas{display:block}
         if (hudEl) hudEl.style.display = '';
         logEl.textContent = '';
         addLog('\uD83D\uDCBE <b>已恢复上次的进度</b> · 第 ' + S.day + ' 天。', 'night');
-        renderBag(); renderMates(); renderGear(); renderProf(); renderFeats();
+        renderBag(); renderMates(); renderGear(); renderProf(); renderCraft(); renderCar(); renderStatus(); renderFeats();
         showPlaces(); paint();
       }
       var logEl = $('[data-log]', root), askEl = $('[data-ask]', root), cardsEl = $('[data-cards]', root);
       var itemsEl = $('[data-items]', root), matesEl = $('[data-mates]', root);
       var setupEl = $('[data-setup]', root), featsEl = $('[data-feats]', root);
       var statusEl = $('[data-status]', root);
+      var carEl = $('[data-car]', root);
       var gearCurEl = $('[data-gearcur]', root), gearListEl = $('[data-gearlist]', root);
       var profListEl = $('[data-proflist]', root);
       var tabsEl = $('.zs-tabbar', root), panesEl = $('.zs-panes', root);
+      var craftListEl = $('[data-craftlist]', root);
       function setTab(k) {
         [].forEach.call(tabsEl.querySelectorAll('.zs-tab'), function (x) { x.classList.toggle('on', x.getAttribute('data-tab') === k); });
         [].forEach.call(panesEl.querySelectorAll('.zs-pane'), function (p) { p.classList.toggle('on', p.getAttribute('data-pane') === k); });
@@ -2971,7 +3065,7 @@ canvas{display:block}
       function renderBag() {
         itemsEl.textContent = '';
         var any = false;
-        ['医疗', '食物', '饮品', '工具', '精神'].forEach(function (kind) {
+        ['医疗', '食物', '饮品', '工具', '材料', '精神'].forEach(function (kind) {
           ITEMS.forEach(function (it) {
             if (it.kind !== kind) return;
             var n = S.bag[it.key] || 0;
@@ -3162,7 +3256,7 @@ canvas{display:block}
           S.lockProg -= LOCKPICKS_PER_LEVEL;
           leveled = addProf('lock', 1);
         }
-        renderBag(); renderProf();
+        renderBag(); renderProf(); renderCraft();
         sfx('click');
         if (Math.random() < rate) {
           addLog('　🔓 <b>锁开了。</b>（开锁成功率 ' + Math.round(rate * 100) + '%）', 'good');
@@ -3204,11 +3298,7 @@ canvas{display:block}
           var loot = pickWeighted(place.table.filter(function (x) { return x.t !== 'zombie' && x.t !== 'gear' && x.t !== 'locked'; }));
           pending = { kind: 'zombie', place: place, entry: loot };
           askEl.textContent = '🧟 屋里一股味道扑面而来——有东西在动！';
-          renderCards([
-            { kind: 'fight', emoji: '🔪', name: '正面搏斗', desc: '成功率 ' + Math.round((FIGHT_BASE + gearBonus() + profBonusOf(equippedGear() ? gearByKey(equippedGear().key) : null)) * 100) + '%' + (equippedGear() ? '（' + gearByKey(equippedGear().key).name + '）' : '（徒手）') + ' · 赢了拿物资，输了挨打且拿不到', cls: 'danger' },
-            { kind: 'flee', emoji: '🏃', name: '转身就跑', desc: '退出房间，可能摔伤', cls: 'danger' },
-            { kind: 'hide', emoji: '🙈', name: '屏住呼吸躲起来', desc: '成败看运气' }
-          ]);
+          renderCards(encounterCards());
           sfx('hit');
           paint();
           return;
@@ -3229,7 +3319,7 @@ canvas{display:block}
         });
       }
       function showPlaces() {
-        var pool = PLACES.slice(), i;
+        var pool = PLACES.filter(function (p) { return !p.needCar || carUsable(); }), i;
         for (i = pool.length - 1; i > 0; i--) { var j = rand(i + 1), t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
         var items = pool.slice(0, 3).map(function (p) {
           return { kind: 'place', place: p, emoji: p.emoji, name: p.name, desc: p.desc + ' · 消耗 1 行动点', cls: 'go' };
@@ -3268,6 +3358,7 @@ canvas{display:block}
       }
       function useItem(it) {
         if (over || !S.bag[it.key]) return;
+        if (it.key === 'molotov') { addLog('🔥 燃烧瓶要在遭遇僵尸时才会用到。', 'dim'); sfx('click'); return; }
         if (it.key === 'lockpick') { addLog('🔓 开锁器要在遇到上锁的柜子/箱子/房间时才会用到。', 'dim'); sfx('click'); return; }
         if (it.key === 'cig' && S.hp <= 1) {
           addLog('🚬 你手抖得连烟都点不着，还是先处理一下伤口吧。', 'bad');
@@ -3290,7 +3381,7 @@ canvas{display:block}
         if (it.kind === '医疗' && cureStatus('bleed')) addLog('🩸 你把伤口包扎好了，血止住了。（流血已解除）', 'good');
         if (it.key === 'splint' && cureStatus('fracture')) addLog('🦴 你把夹板绑紧，骨头稳住了。（骨折已解除）', 'good');
         if (it.key === 'pain' && cureStatus('pain')) addLog('😰 止疼药起效了，疼痛减轻。（疼痛已解除）', 'good');
-        renderStatus(); renderBag();
+        renderStatus(); renderBag(); renderCraft(); renderCar();
         paint();
         if (S.hp <= 0) die('身体已经撑不住了');
       }
@@ -3326,11 +3417,7 @@ canvas{display:block}
           askEl.textContent = threat() >= 0.2
             ? '🧟 尸潮涌了过来——跑不掉了，只能应战！'
             : '🧟 货架后面传来拖沓的脚步声——你被发现了！';
-          renderCards([
-            { kind: 'fight', emoji: '🔪', name: '正面搏斗', desc: '成功率 ' + fightRateText() + ' · 赢了拿物资，输了挨打且拿不到', cls: 'danger' },
-            { kind: 'flee', emoji: '🏃', name: '转身就跑', desc: '这里的物资不要了，可能摔伤', cls: 'danger' },
-            { kind: 'hide', emoji: '🙈', name: '屏住呼吸躲起来', desc: '成败看运气，被咬到很疼' }
-          ]);
+          renderCards(encounterCards());
           sfx('hit');
           paint();
           return;
@@ -3350,6 +3437,17 @@ canvas{display:block}
         else if (e.t === 'item') { var it = grantItem(); txt = '翻到一个「' + it.emoji + ' ' + it.name + '」，塞进了背包' + clrTag + wTag('item'); }
         else if (e.t === 'gear') { var fg2 = findGear(); txt = '翻出一件装备「' + fg2.def.emoji + ' ' + fg2.def.name + '」（耐久 ' + fg2.inst.dur + '，与僵尸搏斗的成功率 +' + Math.round(fg2.def.bonus * 100) + '%）'; }
         else if (e.t === 'sanity') { var s = roll(e.a, e.b); S.sanity = clampMind(S.sanity + s); txt = '这儿让你稍微安心了一点，理智值 +' + s; }
+        else if (e.t === 'mat') { var mk = matPool(place)[rand(matPool(place).length)]; S.bag[mk] = (S.bag[mk] || 0) + 1; var md = itemByKey(mk); txt = '翻出材料「' + md.emoji + ' ' + md.name + '」'; renderCraft(); }
+        else if (e.t === 'car') {
+          if (!S.car) {
+            S.car = { cond: roll(10, 45), fuel: roll(5, 35) };
+            txt = '发现一辆还能修的<b>废弃车辆</b>！车况 ' + S.car.cond + '%、油量 ' + S.car.fuel + '%——去顶部车辆栏修车加油';
+          } else {
+            var pk2 = Math.random() < 0.5 ? 'part' : 'fuel'; S.bag[pk2] = (S.bag[pk2] || 0) + 1;
+            txt = '车底下掉了点东西，你捡到一个「' + itemByKey(pk2).emoji + ' ' + itemByKey(pk2).name + '」';
+          }
+          renderCar(); renderCraft();
+        }
         else if (e.t === 'hurt') { var d = roll(e.a, e.b); S.hp = clampStat(S.hp - d); txt = '被碎玻璃划伤了，生命值 -' + d; }
         else txt = '什么也没找到。';
         addLog('　' + place.emoji + ' ' + txt, e.t === 'hurt' ? 'bad' : 'good');
@@ -3510,6 +3608,17 @@ canvas{display:block}
       }
 
       /* ---------- 遭遇战 ---------- */
+      function encounterCards() {
+        var cards = [
+          { kind: 'fight', emoji: '🔪', name: '正面搏斗', desc: '成功率 ' + fightRateText() + ' · 赢了拿物资，输了挨打且拿不到', cls: 'danger' },
+          { kind: 'flee', emoji: '🏃', name: '转身就跑', desc: '这里的物资不要了，可能摔伤', cls: 'danger' },
+          { kind: 'hide', emoji: '🙈', name: '屏住呼吸躲起来', desc: '成败看运气，被咬到很疼' }
+        ];
+        if ((S.bag.molotov || 0) > 0) {
+          cards.unshift({ kind: 'molotov', emoji: '🔥', name: '扔燃烧瓶', desc: '必定大胜，毫发无伤（消耗 1 个，剩 ' + S.bag.molotov + '）', cls: 'danger' });
+        }
+        return cards;
+      }
       function resolveEncounter(kind) {
         if (!pending || pending.kind !== 'zombie') return;
         var e = pending.entry, place = pending.place;
@@ -3526,7 +3635,13 @@ canvas{display:block}
           return;
         }
         var looted = false, txt;
-        if (kind === 'fight') {
+        if (kind === 'molotov') {
+          S.bag.molotov--; if (!S.bag.molotov) delete S.bag.molotov;
+          var mM = mindLoss(8); S.sanity = clampMind(S.sanity - mM);
+          looted = true; S.extraLoot = 1;
+          txt = '<b>你把燃烧瓶砸在它脚下，火光一下吞了半条街。</b>（大胜，理智 -' + mM + '）';
+          sfx('good'); renderBag(); renderCraft();
+        } else if (kind === 'fight') {
           // 搏斗三态：大胜（无损+双倍物资）/ 惨胜（拿物资但挂彩）/ 失败（挨打且空手）
           var eqG = equippedGear();
           var eqDef = eqG ? gearByKey(eqG.key) : null;
@@ -3728,11 +3843,7 @@ canvas{display:block}
           pending = { kind: 'zombie', place: PLACES[0], entry: lootR };
           addLog('🌊 休整到一半，门被撞开了——尸潮冲进来了！', 'bad');
           askEl.textContent = '🧟 尸潮冲进来了——只能应战！';
-          renderCards([
-            { kind: 'fight', emoji: '🔪', name: '正面搏斗', desc: '成功率 ' + fightRateText() + ' · 赢了拿物资，输了挨打且拿不到', cls: 'danger' },
-            { kind: 'flee', emoji: '🏃', name: '冲出去', desc: '脸上会挂彩，但能脱身', cls: 'danger' },
-            { kind: 'hide', emoji: '🙈', name: '躲进里屋', desc: '屋里有只能堵门的柜子' }
-          ]);
+          renderCards(encounterCards());
           sfx('hit'); paint(); return;
         }
         var sm = roll(10, 18), hm = (S.food > 20 && S.water > 20) ? roll(2, 6) : 0;
@@ -3749,7 +3860,7 @@ canvas{display:block}
       function reset(feats) {
         // feats 先落，apPerDay()/teamMax() 依赖它
         S = { day: 1, ap: 0, hp: 100, food: 80, water: 80, sanity: 80, maxMind: 100, bag: {}, team: [], feats: feats || {}, cigToday: false, gears: [], equippedId: null, gearSeq: 1, prof: { blunt: 0, blade: 0, lock: 0 }, lockProg: 0,
-          weather: 'clear', status: {}, hordeOn: false, hordeNext: 0, hordeWarned: false, afterHorde: false };
+          weather: 'clear', status: {}, hordeOn: false, hordeNext: 0, hordeWarned: false, afterHorde: false, car: null };
         S.ap = apPerDay();
         over = false; pending = null; S.extraLoot = 0; clearRun();
         rollWeather(); scheduleHorde();
@@ -3767,11 +3878,53 @@ canvas{display:block}
         renderMates();
         renderGear();
         renderProf();
+        renderCraft();
+        renderCar();
         renderFeats();
         renderStatus();
         showPlaces();
         paint();
       }
+      function renderCar() {
+        if (!carEl) return;
+        if (!S.car) { carEl.style.display = 'none'; carEl.textContent = ''; return; }
+        carEl.style.display = '';
+        var c = S.car, ok = carUsable();
+        var note = ok ? '可用 · 行动点 +1' : (c.cond < 50 ? '车况不足 50%，开不动' : '没油了');
+        carEl.textContent = '';
+        carEl.appendChild(html('<div class="zs-carwrap">' +
+          '<div class="zs-carhead"><span>🚗 车辆</span><em class="' + (ok ? 'ok' : 'no') + '">' + note + '</em></div>' +
+          '<div class="zs-carbars">' +
+          '<div class="zs-cbar k-cond"><span>车况</span><b>' + c.cond + '%</b><i><u style="width:' + c.cond + '%"></u></i></div>' +
+          '<div class="zs-cbar k-fuel"><span>油量</span><b>' + c.fuel + '%</b><i><u style="width:' + c.fuel + '%"></u></i></div>' +
+          '</div>' +
+          '<div class="zs-carbtns">' +
+          '<button class="zs-cbtn" data-car="fix"' + ((S.bag.part || 0) > 0 && c.cond < 100 ? '' : ' disabled') + '>🔧 用零件修 · 剩 ' + (S.bag.part || 0) + '</button>' +
+          '<button class="zs-cbtn" data-car="fuel"' + ((S.bag.fuel || 0) > 0 && c.fuel < 100 ? '' : ' disabled') + '>⛽ 加油 · 剩 ' + (S.bag.fuel || 0) + '</button>' +
+          '</div></div>'));
+      }
+
+      function renderCraft() {
+        if (!craftListEl) return;
+        craftListEl.textContent = '';
+        RECIPES.forEach(function (r) {
+          var ok = canCraft(r);
+          var mats = Object.keys(r.need).map(function (k) {
+            var it = itemByKey(k), have = S.bag[k] || 0, need = r.need[k];
+            return '<span class="' + (have >= need ? 'ok' : 'no') + '">' + it.emoji + it.name + ' ' + have + '/' + need + '</span>';
+          }).join('');
+          var box = html('<div class="zs-recipe' + (ok ? ' can' : '') + '">' +
+            '<span class="zs-remj">' + r.emoji + '</span>' +
+            '<div class="zs-rebody"><b>' + r.name + (itemByKey(r.out) && S.bag[r.out] ? ' <i>已有 ×' + S.bag[r.out] + '</i>' : '') + '</b>' +
+            '<em>' + r.d + '</em><div class="zs-remats">' + mats + '</div></div>' +
+            '<button class="zs-rbtn" data-craft="' + r.key + '"' + (ok ? '' : ' disabled') + '>' + (ok ? '合成' : '缺料') + '</button></div>');
+          craftListEl.appendChild(box);
+        });
+        var n = RECIPES.filter(canCraft).length;
+        var cb = $('[data-badge="craft"]', root);
+        if (cb) { cb.textContent = n; cb.style.display = n ? '' : 'none'; }
+      }
+
       function renderStatus() {
         if (!statusEl) return;
         statusEl.textContent = '';
@@ -3900,6 +4053,27 @@ canvas{display:block}
       api.on(root, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('[data-restart]') : null;
         if (b) askRestart();
+      });
+      api.on(carEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('[data-car]') : null;
+        if (!b || b.disabled || over) return;
+        var k = b.getAttribute('data-car');
+        if (k === 'fix' && (S.bag.part || 0) > 0) {
+          S.bag.part--; if (!S.bag.part) delete S.bag.part;
+          S.car.cond = Math.min(100, S.car.cond + 30);
+          addLog('🔧 你换了个零件，车况修到 ' + S.car.cond + '%。', 'good'); sfx('good');
+        } else if (k === 'fuel' && (S.bag.fuel || 0) > 0) {
+          S.bag.fuel--; if (!S.bag.fuel) delete S.bag.fuel;
+          S.car.fuel = Math.min(100, S.car.fuel + 40);
+          addLog('⛽ 你灌了一桶油，油量到 ' + S.car.fuel + '%。', 'good'); sfx('good');
+        }
+        renderBag(); renderCar(); renderCraft(); paint();
+      });
+      api.on(craftListEl, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('[data-craft]') : null;
+        if (!b || b.disabled) return;
+        var k = b.getAttribute('data-craft');
+        for (var i = 0; i < RECIPES.length; i++) if (RECIPES[i].key === k) { doCraft(RECIPES[i]); return; }
       });
       api.on(tabsEl, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('.zs-tab') : null;
