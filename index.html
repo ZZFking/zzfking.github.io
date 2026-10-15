@@ -471,6 +471,9 @@ canvas{display:block}
 .zs-panehead{font-size:11.5px;color:var(--dim);margin-bottom:9px;min-height:15px}
 .zs-panehead em{font-style:normal}
 /* 伤病状态 */
+.hud-restart{margin-left:auto;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px;
+  color:var(--dim);background:rgba(255,255,255,.04);cursor:pointer;font-family:inherit;transition:.16s;white-space:nowrap}
+.hud-restart:hover{color:#ffb0bd;border-color:rgba(244,63,94,.55);background:rgba(244,63,94,.13)}
 .zs-status{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .zs-statnone{font-size:11.5px;color:#5c6479}
 .zs-statchip{font-size:11.5px;padding:4px 10px;border-radius:9px;font-weight:600;
@@ -2779,6 +2782,7 @@ canvas{display:block}
         '<span class="hud-item">队伍<b data-team>0/2</b></span>' +
         '<span class="hud-item">尸潮<b data-threat>平静</b></span>' +
         '<span class="hud-item" data-wx>☀️ 晴 · 春季</span>' +
+        '<button class="hud-restart" data-restart title="重新开始本局">🔄 重开</button>' +
         '</div>' +
         '<div class="zs">' +
         '<div class="zs-setup" data-setup></div>' +
@@ -3868,6 +3872,34 @@ canvas{display:block}
         }
         var b = e.target && e.target.closest ? e.target.closest('.zs-item') : null;
         if (b && b.__it) useItem(b.__it);
+      });
+      // 局内重开：二次确认，可选沿用特性或回到特性选择
+      function askRestart() {
+        if (over || $('.idle-confirm', root)) return;
+        var m = html('<div class="idle-confirm"><div class="idle-confirm-card">' +
+          '<h3>🔄 重新开始？</h3>' +
+          '<p>当前是<b>第 ' + S.day + ' 天</b>，背包 ' + bagCount() + ' 件、队伍 ' + S.team.length + ' 人。' +
+          '<span>重开会丢掉这一局的全部进度。</span></p>' +
+          '<div class="idle-confirm-actions">' +
+          '<button class="btn sm primary" data-cf="same">沿用当前特性重开</button>' +
+          '<button class="btn sm" data-cf="pick">回到特性选择</button>' +
+          '<button class="btn sm" data-cf="cancel">取消</button>' +
+          '</div></div></div>');
+        m.addEventListener('click', function (e) {
+          var b = e.target && e.target.closest ? e.target.closest('[data-cf]') : null;
+          if (!b) return;
+          var k = b.getAttribute('data-cf');
+          if (k === 'cancel') { sfx('click'); m.remove(); return; }
+          sfx('good');
+          m.remove();
+          if (k === 'same') reset(S.feats); else showSetup();
+        });
+        root.appendChild(m);
+        sfx('click');
+      }
+      api.on(root, 'click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('[data-restart]') : null;
+        if (b) askRestart();
       });
       api.on(tabsEl, 'click', function (e) {
         var b = e.target && e.target.closest ? e.target.closest('.zs-tab') : null;
