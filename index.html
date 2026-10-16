@@ -508,6 +508,69 @@ canvas{display:block}
   border:1px solid rgba(52,211,153,.5);background:rgba(52,211,153,.15);color:#8ff0c8;transition:.15s}
 .zs-rbtn:hover:not(:disabled){background:rgba(52,211,153,.3);color:#fff}
 .zs-rbtn:disabled{cursor:not-allowed;opacity:.45;border-color:var(--line);background:rgba(255,255,255,.04);color:#6d768c}
+/* ===== 凡哥魔塔 ===== */
+.mt-wrap{display:flex;flex-direction:column;gap:10px;width:min(620px,100%)}
+.mt-topbar{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--dim)}
+.mt-topbar span{flex:1;font-weight:600;color:var(--text);letter-spacing:.4px}
+.mt-btn{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:11.5px;font-family:inherit;
+  color:var(--dim);background:rgba(255,255,255,.04);cursor:pointer;transition:.15s}
+.mt-btn:hover{color:var(--text);border-color:var(--line-2);background:rgba(255,255,255,.09)}
+.mt-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;padding:9px;
+  border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.4)}
+.mt-cell{position:relative;aspect-ratio:1;display:grid;place-items:center;border-radius:7px;
+  font-size:15px;line-height:1;background:rgba(255,255,255,.035);transition:background .12s}
+.mt-wall{background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.mt-hero{background:linear-gradient(160deg,#ff7a18,#ff4d6d);font-size:17px;z-index:2;
+  box-shadow:0 0 0 2px rgba(255,180,120,.6),0 0 18px rgba(255,122,24,.55)}
+.mt-enemy{background:rgba(244,63,94,.16);box-shadow:inset 0 0 0 1px rgba(244,63,94,.34)}
+.mt-boss{background:rgba(168,85,247,.28);box-shadow:inset 0 0 0 1px rgba(192,132,252,.7),0 0 14px rgba(168,85,247,.4);font-size:18px}
+.mt-hurt{background:rgba(250,204,21,.14);box-shadow:inset 0 0 0 1px rgba(250,204,21,.34)}
+.mt-free{background:rgba(52,211,153,.14);box-shadow:inset 0 0 0 1px rgba(52,211,153,.34)}
+.mt-deadly{background:rgba(220,38,38,.30);box-shadow:inset 0 0 0 1px rgba(248,113,113,.75);animation:mtPulse 1.4s ease-in-out infinite}
+.mt-cant{background:rgba(71,85,105,.45);box-shadow:inset 0 0 0 1px rgba(148,163,184,.5)}
+@keyframes mtPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.mt-dmg{position:absolute;right:2px;bottom:1px;font-style:normal;font-size:8.5px;font-weight:800;
+  color:#ffd9c0;background:rgba(0,0,0,.6);border-radius:5px;padding:0 3px;line-height:1.5}
+.mt-cell.mt-cant .mt-dmg{color:#cbd5e1}
+.mt-cell.mt-free .mt-dmg{color:#8ff0c8}
+.mt-gem{background:rgba(56,189,248,.14);box-shadow:inset 0 0 0 1px rgba(56,189,248,.35)}
+.mt-door{background:rgba(255,255,255,.07)}
+.mt-dy{box-shadow:inset 0 0 0 1px rgba(250,204,21,.6)}
+.mt-db{box-shadow:inset 0 0 0 1px rgba(56,189,248,.6)}
+.mt-dr{box-shadow:inset 0 0 0 1px rgba(244,63,94,.6)}
+.mt-up{background:rgba(52,211,153,.2);box-shadow:inset 0 0 0 1px rgba(52,211,153,.6)}
+.mt-shop{background:rgba(251,191,36,.16);box-shadow:inset 0 0 0 1px rgba(251,191,36,.5)}
+.mt-npc{background:rgba(167,139,250,.18);box-shadow:inset 0 0 0 1px rgba(167,139,250,.5)}
+.mt-dpad{display:flex;flex-direction:column;align-items:center;gap:6px}
+.mt-dpad-row{display:flex;gap:6px}
+.mt-dpad button{width:64px;height:44px;border-radius:12px;font-size:16px;cursor:pointer;font-family:inherit;
+  border:1px solid var(--line-2);background:rgba(255,255,255,.06);color:var(--text);transition:.12s}
+.mt-dpad button:hover{background:rgba(255,122,24,.22);border-color:rgba(255,122,24,.6)}
+.mt-dpad button:active{transform:scale(.94)}
+.mt-log{border:1px solid var(--line);border-radius:14px;background:rgba(0,0,0,.3);padding:9px 11px;
+  max-height:132px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.mt-line{font-size:12px;color:#c3ccdf;line-height:1.65}
+.mt-line b{color:var(--o)}
+.mt-story{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:20px;
+  background:rgba(4,5,12,.78);backdrop-filter:blur(7px);animation:fade .2s}
+.mt-story-card{width:min(520px,94vw);max-height:86vh;overflow-y:auto;border:1px solid var(--line-2);border-radius:20px;
+  padding:24px 22px;background:linear-gradient(170deg,rgba(28,20,40,.98),rgba(10,11,20,.99));
+  box-shadow:0 30px 80px rgba(0,0,0,.75);text-align:center}
+.mt-story-card h3{font-size:18px;margin-bottom:14px}
+.mt-story-body p{color:#c9d2e4;font-size:13.5px;line-height:2;margin-bottom:6px}
+.mt-story-body b{color:var(--o)}
+.mt-story-card .btn{margin-top:16px}
+.mt-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:11.5px}
+.mt-table th{color:var(--dim);font-weight:600;padding:5px 3px;border-bottom:1px solid var(--line)}
+.mt-table td{padding:5px 3px;border-bottom:1px solid rgba(255,255,255,.05);color:#c3ccdf}
+.mt-table .mt-x{color:#fb7185}
+.mt-shop{display:flex;flex-direction:column;gap:9px;margin:16px 0 4px}
+.mt-shop button{padding:11px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;
+  border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.13);color:#ffd98a;transition:.15s;
+  display:flex;justify-content:space-between;align-items:center}
+.mt-shop button:hover:not(:disabled){background:rgba(251,191,36,.26);color:#fff}
+.mt-shop button:disabled{opacity:.4;cursor:not-allowed;border-color:var(--line);background:rgba(255,255,255,.04);color:#6d768c}
+.mt-shop button i{font-style:normal;font-size:11.5px;opacity:.85}
 .hud-restart{margin-left:auto;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px;
   color:var(--dim);background:rgba(255,255,255,.04);cursor:pointer;font-family:inherit;transition:.16s;white-space:nowrap}
 .hud-restart:hover{color:#ffb0bd;border-color:rgba(244,63,94,.55);background:rgba(244,63,94,.13)}
@@ -4137,7 +4200,431 @@ canvas{display:block}
     }
   };
 
-  var GAMES = [G_SNAKE, G_BREAK, G_2048, G_MEM, G_MINE, G_PONG, G_DODGE, G_IDLE, G_EXAM, G_ZOMBIE];
+  /* =========================================================
+     游戏 11：凡哥魔塔（网格 RPG / 剧情）
+     ========================================================= */
+/* =========================================================
+     游戏 11：凡哥魔塔（网格 RPG / 剧情）
+     ========================================================= */
+  var G_TOWER = {
+    id: 'tower', name: '凡哥魔塔', emoji: '🗼', cat: '剧情', diff: 4,
+    desc: '凡哥醒来时整栋宿舍楼变成了一座塔。逐层向上，顶楼等着他的是童建恒。',
+    better: 'high', fmt: function (v) { return v + ' 剩余生命'; },
+    mount: function (root, api) {
+      root.innerHTML =
+        '<div class="hud">' +
+        '<span class="hud-item">❤️ 生命<b data-hp>1000</b></span>' +
+        '<span class="hud-item">⚔️ 攻击<b data-atk>10</b></span>' +
+        '<span class="hud-item">🛡️ 防御<b data-def>10</b></span>' +
+        '<span class="hud-item">🗝️ <b data-keys>0/0/0</b></span>' +
+        '<span class="hud-item">💰 <b data-gold>0</b></span>' +
+        '<span class="hud-item">🗼 <b data-floor>1F</b></span>' +
+        '</div>' +
+        '<div class="mt-wrap">' +
+        '<div class="mt-topbar"><span data-fname>宿舍楼 · 1F 大厅</span>' +
+        '<button class="mt-btn" data-info>📖 图鉴</button>' +
+        '<button class="mt-btn" data-restart>🔄 重开</button></div>' +
+        '<div class="mt-grid" data-grid></div>' +
+        '<div class="mt-dpad">' +
+        '<button data-dir="up">▲</button>' +
+        '<div class="mt-dpad-row"><button data-dir="left">◀</button>' +
+        '<button data-dir="down">▼</button><button data-dir="right">▶</button></div>' +
+        '</div>' +
+        '<div class="mt-log" data-log></div>' +
+        '</div>' +
+        '<p class="tip">方向键 / WASD 移动，手机用下方方向键。撞上怪物就是攻击——<b>战斗是算出来的</b>，格子上会显示这一战要掉多少血，打不过就别碰。先捡宝石再打怪，顺序错了会卡死。</p>';
+
+      /* ---------- 怪物 ---------- */
+      var EN = {
+        s: { name: '拖延兽', emoji: '🦠', hp: 40, atk: 16, def: 1, gold: 4 },
+        v: { name: '熬夜蝙蝠', emoji: '🦇', hp: 60, atk: 22, def: 3, gold: 7 },
+        k: { name: '早八骷髅', emoji: '💀', hp: 90, atk: 30, def: 6, gold: 12 },
+        o: { name: '作业兽人', emoji: '👹', hp: 140, atk: 38, def: 10, gold: 18 },
+        w: { name: '补考法师', emoji: '🧙', hp: 180, atk: 52, def: 9, gold: 26 },
+        t: { name: '论文石像', emoji: '🗿', hp: 260, atk: 46, def: 18, gold: 36 },
+        d: { name: '通宵吸血鬼', emoji: '🧛', hp: 320, atk: 72, def: 15, gold: 50 },
+        Z: { name: '童建恒', emoji: '😈', hp: 700, atk: 105, def: 10, gold: 0, boss: true }
+      };
+      /* ---------- 楼层 ---------- */
+      var FLOORS = [
+        {
+          name: '宿舍楼 · 1F 大厅',
+          start: [9, 5],
+          story: ['🔒 <b>第 1 层 · 宿舍楼大厅</b>',
+            '凡哥睁开眼，天花板还在转。楼道的铁门被焊死了，只有楼梯还通着。',
+            '手机屏幕亮着，上面只有一行字：<b>爬上来，我等你。</b><br>——童建恒'],
+          map: [
+            '###########',
+            '#....s....#',
+            '#.##.#.##.#',
+            '#.#y...y#.#',
+            '#.#.#Y#.#.#',
+            '#...#U#...#',
+            '#.#.###.#.#',
+            '#.#P1$..#.#',
+            '#.##.#.##.#',
+            '#....s....#',
+            '###########']
+        },
+        {
+          name: '宿舍楼 · 2F 走廊',
+          start: [9, 5],
+          story: ['💡 <b>第 2 层 · 走廊</b>',
+            '走廊尽头的灯一闪一闪，墙皮往下掉。',
+            '墙上贴着一张值日表，最上面一行写着『童建恒』——那三个字被人反复描过，描得纸都破了。'],
+          map: [
+            '###########',
+            '#..s.P.s..#',
+            '#.##.#.##.#',
+            '#.#b.1.b#.#',
+            '#.#.#B#.#.#',
+            '#...#U#...#',
+            '#.#.###.#.#',
+            '#.#2..o$#.#',
+            '#.##.#.##.#',
+            '#..s...s..#',
+            '###########']
+        },
+        {
+          name: '宿舍楼 · 3F 食堂',
+          start: [9, 5],
+          story: ['🍚 <b>第 3 层 · 食堂</b>',
+            '食堂里飘着隔夜的味道。窗口后面坐着个影子，看不出脸。',
+            '『要买点什么吗？』它说，『往上走的人，都得先学会算账。』'],
+          map: [
+            '###########',
+            '#..k.Q.k..#',
+            '#.##.#.##.#',
+            '#.#P.S.P#.#',
+            '#.#.#.#.#.#',
+            '#...#U#...#',
+            '#.#.#.#.#.#',
+            '#.#21..$#.#',
+            '#.##.#.##.#',
+            '#..o...o..#',
+            '###########']
+        },
+        {
+          name: '宿舍楼 · 4F 自习室',
+          start: [9, 5],
+          story: ['📚 <b>第 4 层 · 自习室</b>',
+            '自习室的灯全亮着，桌上摊着没写完的卷子，椅子上一个人也没有。',
+            '每一张卷子的名字栏都是同一个名字。你忽然想起来——<b>童建恒考试从来没及格过</b>。'],
+          map: [
+            '###########',
+            '#.Pw...wP.#',
+            '#.##.#.##.#',
+            '#.#r...r#.#',
+            '#.#.#R#.#.#',
+            '#...#U#...#',
+            '#.#.###.#.#',
+            '#.#12.$.#.#',
+            '#.##.#.##.#',
+            '#..k...k..#',
+            '###########']
+        },
+        {
+          name: '宿舍楼 · 5F 天台',
+          start: [9, 5],
+          story: ['🌃 <b>第 5 层 · 天台</b>',
+            '推开天台的门，风很大。城市在下面亮着，安静得不像话。',
+            '『你终于上来了。』声音从上面传下来，很轻。'],
+          map: [
+            '###########',
+            '#1.d...d.2#',
+            '#.##.#.##.#',
+            '#.#P.S.P#.#',
+            '#.#.#.#.#.#',
+            '#...#U#...#',
+            '#.#.#.#.#.#',
+            '#.#21Q.$#.#',
+            '#.##.#.##.#',
+            '#Q.t.$.t..#',
+            '###########']
+        },
+        {
+          name: '宿舍楼 · 6F 顶层',
+          start: [9, 5],
+          story: ['😈 <b>第 6 层 · 顶层</b>',
+            '童建恒站在楼顶边缘，背对着你，风把他的校服吹得鼓起来。',
+            '『凡哥，』他转过身，『这栋楼是我为你搭的。』',
+            '『你每次都说下次一定。这次呢？』'],
+          map: [
+            '###########',
+            '#..P.P.P..#',
+            '#.#######.#',
+            '#.#.....#.#',
+            '#.#.#.#.#.#',
+            '#.#.#Z#.#.#',
+            '#.#.#.#.#.#',
+            '#.#.....#.#',
+            '#.####Y####',
+            '#..$.N.$..#',
+            '###########']
+        }
+      ];
+            var gridEl = $('[data-grid]', root), logEl = $('[data-log]', root);
+      var R = 11, C = 11;
+      var S, map, cells = [], over = false, storySeen = {}, bossTalked = false;
+
+      function blank() {
+        S = { hp: 1000, maxhp: 1000, atk: 10, def: 10, ky: 0, kb: 0, kr: 0, gold: 0, fl: 0, r: 0, c: 0 };
+        map = null; over = false; storySeen = {}; bossTalked = false;
+      }
+      function fightCost(e) {
+        var dmg = S.atk - e.def;
+        if (dmg <= 0) return -1;                      // 打不动
+        var turns = Math.ceil(e.hp / dmg);
+        return turns * Math.max(0, e.atk - S.def);
+      }
+      function loadFloor(i) {
+        S.fl = i;
+        map = FLOORS[i].map.map(function (row) { return row.split(''); });
+        var st = FLOORS[i].start;
+        if (i > 0) { map[st[0]][st[1]] = '.'; }
+        S.r = st[0]; S.c = st[1];
+        if (i === 0) { map[st[0]][st[1]] = '.'; }
+        addLog('🗼 来到 <b>' + FLOORS[i].name + '</b>');
+        if (!storySeen[i]) { storySeen[i] = true; showStory(FLOORS[i].story); }
+        render();
+      }
+      function addLog(t) {
+        var d = document.createElement('div');
+        d.className = 'mt-line';
+        d.innerHTML = t;
+        logEl.insertBefore(d, logEl.firstChild);
+        while (logEl.childNodes.length > 24) logEl.removeChild(logEl.lastChild);
+      }
+      function showStory(lines) {
+        var wrap = document.createElement('div');
+        wrap.className = 'mt-story';
+        wrap.innerHTML = '<div class="mt-story-card"><div class="mt-story-body">' +
+          lines.map(function (t) { return '<p>' + t + '</p>'; }).join('') +
+          '</div><button class="btn primary" data-ok>继续</button></div>';
+        wrap.addEventListener('click', function (e) {
+          if (e.target.closest('[data-ok]')) { wrap.remove(); sfx('click'); }
+        });
+        root.appendChild(wrap);
+        sfx('good');
+      }
+      var SHOP = [
+        { key: 'atk', label: '⚔️ 攻击 +3', cost: 30, apply: function () { S.atk += 3; } },
+        { key: 'def', label: '🛡️ 防御 +3', cost: 30, apply: function () { S.def += 3; } },
+        { key: 'hp', label: '❤️ 生命 +500', cost: 30, apply: function () { S.hp += 500; S.maxhp = Math.max(S.maxhp, S.hp); } }
+      ];
+      function openShop() {
+        var wrap = document.createElement('div');
+        wrap.className = 'mt-story';
+        function paint() {
+          wrap.innerHTML = '<div class="mt-story-card"><h3>🏪 食堂窗口</h3>' +
+            '<p>『往上走的人，都得先学会算账。』<br>你现在有 <b>' + S.gold + '</b> 金币。</p>' +
+            '<div class="mt-shop">' + SHOP.map(function (s) {
+              return '<button data-buy="' + s.key + '"' + (S.gold >= s.cost ? '' : ' disabled') + '>' +
+                s.label + '<i>' + s.cost + ' 金</i></button>';
+            }).join('') + '</div>' +
+            '<button class="btn primary" data-ok>离开</button></div>';
+        }
+        paint();
+        wrap.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-buy]');
+          if (b && !b.disabled) {
+            var k = b.getAttribute('data-buy');
+            for (var i = 0; i < SHOP.length; i++) if (SHOP[i].key === k) {
+              if (S.gold < SHOP[i].cost) return;
+              S.gold -= SHOP[i].cost; SHOP[i].apply();
+              sfx('eat'); addLog('🏪 你花 ' + SHOP[i].cost + ' 金买了「' + SHOP[i].label + '」');
+              paint(); hud();
+            }
+            return;
+          }
+          if (e.target.closest('[data-ok]')) { wrap.remove(); sfx('click'); }
+        });
+        root.appendChild(wrap);
+        sfx('click');
+      }
+      function resolve(dr, dc) {
+        if (over || !map) return;
+        if ($('.mt-story', root)) return;
+        var nr = S.r + dr, nc = S.c + dc;
+        if (nr < 0 || nc < 0 || nr >= R || nc >= C) return;
+        var t = map[nr][nc];
+        if (t === '#') { sfx('hit'); return; }
+        if (EN[t]) {
+          var e = EN[t], cost = fightCost(e);
+          if (cost < 0) { addLog('🚫 你的攻击(' + S.atk + ')破不了「' + e.name + '」的防御(' + e.def + ')，先去找宝石。'); sfx('hit'); return; }
+          if (cost >= S.hp) { addLog('💀 打「' + e.name + '」要掉 <b>' + cost + '</b> 血，你只剩 ' + S.hp + '——这样会死。'); sfx('hit'); return; }
+          if (e.boss && !bossTalked) {
+            bossTalked = true;
+            showStory(['😈 <b>童建恒</b>',
+              '『凡哥，你还记得高二那年吗？』他说，『我让你陪我打一把游戏，你说下次一定。』',
+              '『后来分班、毕业、各自上班。你有多少个"下次一定"？』',
+              '他叹了口长气：『那就打吧。打赢我，你就上去。』']);
+          }
+          S.hp -= cost;
+          S.gold += e.gold;
+          map[nr][nc] = '.';
+          addLog('⚔️ 击败 <b>' + e.name + '</b>，损失 ' + cost + ' 生命，得到 ' + e.gold + ' 金币。');
+          sfx(e.boss ? 'win' : 'eat');
+          S.r = nr; S.c = nc;
+          hud(); render();
+          if (e.boss) return win();
+          return;
+        }
+        if (t === 'Y' || t === 'B' || t === 'R') {
+          var need = t === 'Y' ? 'ky' : (t === 'B' ? 'kb' : 'kr');
+          var kn = t === 'Y' ? '黄钥匙' : (t === 'B' ? '蓝钥匙' : '红钥匙');
+          if (S[need] <= 0) { addLog('🔒 这是' + kn + '才能开的门，你没有。'); sfx('hit'); return; }
+          S[need]--;
+          map[nr][nc] = '.';
+          addLog('🔓 你用' + kn + '打开了门。');
+          sfx('good'); hud();
+        } else if (t === 'U') {
+          sfx('win');
+          if (S.fl + 1 >= FLOORS.length) return;
+          loadFloor(S.fl + 1);
+          hud();
+          return;
+        } else if (t === 'y') { S.ky++; addLog('🗝️ 捡到黄钥匙 ×1'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === 'b') { S.kb++; addLog('🗝️ 捡到蓝钥匙 ×1'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === 'r') { S.kr++; addLog('🗝️ 捡到红钥匙 ×1'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === '1') { S.atk += 4; addLog('💎 红宝石：攻击 +4'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === '2') { S.def += 4; addLog('💎 蓝宝石：防御 +4'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === 'P') { S.hp += 250; addLog('🧪 红药水：生命 +250'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === 'Q') { S.hp += 800; addLog('🧪 蓝药水：生命 +800'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === '$') { S.gold += 5; addLog('💰 捡到 5 金币'); sfx('good'); map[nr][nc] = '.'; hud(); }
+        else if (t === 'S') { S.r = nr; S.c = nc; hud(); render(); openShop(); return; }
+        else if (t === 'N') {
+          map[nr][nc] = '.';
+          showStory(['💬 <b>值日表上的名字</b>',
+            '你凑近看，那张值日表上『童建恒』三个字是用红笔一遍遍描出来的，描到纸都透了。',
+            '旁边还有一行小字，很轻：<b>『凡哥，你怎么还不来。』</b>']);
+        }
+        S.r = nr; S.c = nc;
+        hud(); render();
+      }
+      function win() {
+        over = true; api.submit(S.hp); sfx('win');
+        api.gameOver({
+          result: 'win',
+          title: '🏆 童建恒倒下了',
+          sub: '『行吧，你赢了。』他笑了笑，<br>『记得把那篇作文写完。』<br><br>' +
+            '他说完就散了，像从来没存在过。<br>天亮时，凡哥趴在宿舍的桌子上醒来，<br>窗外有人在喊他起床。<br><br>' +
+            '剩余生命 <b>' + S.hp + '</b> · 攻击 ' + S.atk + ' · 防御 ' + S.def,
+          againText: '再爬一次',
+          onRestart: function () { start(); }
+        });
+      }
+      function lose(reason) {
+        over = true; sfx('lose');
+        api.gameOver({
+          result: 'lose',
+          title: '💀 倒在了 ' + (S.fl + 1) + 'F',
+          sub: reason + '<br><br>到达层数 <b>' + (S.fl + 1) + ' / ' + FLOORS.length + '</b><br>' +
+            '攻击 ' + S.atk + ' · 防御 ' + S.def + ' · 金币 ' + S.gold,
+          againText: '再爬一次',
+          onRestart: function () { start(); }
+        });
+      }
+      function checkDead() {
+        if (S.hp <= 0) { S.hp = 0; lose('生命耗尽了。'); return true; }
+        return false;
+      }
+      function hud() {
+        $('[data-hp]', root).textContent = Math.max(0, S.hp);
+        $('[data-atk]', root).textContent = S.atk;
+        $('[data-def]', root).textContent = S.def;
+        $('[data-keys]', root).textContent = S.ky + '/' + S.kb + '/' + S.kr;
+        $('[data-gold]', root).textContent = S.gold;
+        $('[data-floor]', root).textContent = (S.fl + 1) + 'F';
+        $('[data-fname]', root).textContent = FLOORS[S.fl].name;
+      }
+      function cellHTML(t, r, c) {
+        var cls = 'mt-cell', html = '', sub = '';
+        if (t === '#') { cls += ' mt-wall'; }
+        else if (EN[t]) {
+          var e = EN[t], cost = fightCost(e);
+          cls += ' mt-enemy' + (e.boss ? ' mt-boss' : '');
+          html = e.emoji;
+          if (cost < 0) sub = '∞';
+          else sub = String(cost);
+          cls += cost < 0 ? ' mt-cant' : (cost >= S.hp ? ' mt-deadly' : (cost > 0 ? ' mt-hurt' : ' mt-free'));
+        }
+        else if (t === 'U') { cls += ' mt-up'; html = '⬆️'; }
+        else if (t === 'Y') { cls += ' mt-door mt-dy'; html = '🚪'; }
+        else if (t === 'B') { cls += ' mt-door mt-db'; html = '🚪'; }
+        else if (t === 'R') { cls += ' mt-door mt-dr'; html = '🚪'; }
+        else if (t === 'y') { html = '🗝️'; }
+        else if (t === 'b') { html = '🗝️'; }
+        else if (t === 'r') { html = '🗝️'; }
+        else if (t === '1') { html = '💎'; cls += ' mt-gem'; }
+        else if (t === '2') { html = '💠'; cls += ' mt-gem'; }
+        else if (t === 'P') { html = '🧪'; }
+        else if (t === 'Q') { html = '⚗️'; }
+        else if (t === '$') { html = '💰'; }
+        else if (t === 'S') { cls += ' mt-shop'; html = '🏪'; }
+        else if (t === 'N') { cls += ' mt-npc'; html = '💬'; }
+        return { cls: cls, html: html, sub: sub };
+      }
+      function render() {
+        for (var r = 0; r < R; r++) for (var c = 0; c < C; c++) {
+          var d = cells[r * C + c];
+          if (r === S.r && c === S.c) {
+            d.className = 'mt-cell mt-hero';
+            d.innerHTML = '🧑‍🎓';
+            d.setAttribute('title', '凡哥');
+          } else {
+            var o = cellHTML(map[r][c], r, c);
+            d.className = o.cls;
+            d.innerHTML = o.html + (o.sub ? '<i class="mt-dmg">' + o.sub + '</i>' : '');
+          }
+        }
+        checkDead();
+      }
+      function start() {
+        blank();
+        var w = $('.mt-story', root); if (w) w.remove();
+        logEl.textContent = '';
+        for (var r = 0; r < R; r++) for (var c = 0; c < C; c++) map = map || null;
+        map = null;
+        loadFloor(0);
+        hud(); render();
+      }
+      // 建格子
+      gridEl.textContent = '';
+      for (var i = 0; i < R * C; i++) {
+        var d = document.createElement('div');
+        d.className = 'mt-cell';
+        gridEl.appendChild(d); cells.push(d);
+      }
+      var DIRS = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
+      api.on(document, 'keydown', function (e) {
+        var k = e.key.toLowerCase(), m = {
+          arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down',
+          arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right'
+        };
+        if (m[k]) { e.preventDefault(); var dd = DIRS[m[k]]; resolve(dd[0], dd[1]); }
+      });
+      api.on(root, 'click', function (e) {
+        var b = e.target.closest ? e.target.closest('[data-dir],[data-restart],[data-info]') : null;
+        if (!b) return;
+        if (b.hasAttribute('data-dir')) { var dd = DIRS[b.getAttribute('data-dir')]; resolve(dd[0], dd[1]); return; }
+        if (b.hasAttribute('data-restart')) { sfx('click'); start(); return; }
+        if (b.hasAttribute('data-info')) {
+          var rows = Object.keys(EN).map(function (k) {
+            var e = EN[k], cost = fightCost(e);
+            return '<tr><td>' + e.emoji + ' ' + e.name + '</td><td>' + e.hp + '</td><td>' + e.atk + '</td><td>' + e.def + '</td>' +
+              '<td>' + (cost < 0 ? '<b class="mt-x">打不动</b>' : cost + ' 血') + '</td><td>' + e.gold + '</td></tr>';
+          }).join('');
+          showStory(['📖 <b>图鉴（按当前属性计算）</b>' +
+            '<table class="mt-table"><tr><th>怪物</th><th>生命</th><th>攻击</th><th>防御</th><th>这一战</th><th>金币</th></tr>' + rows + '</table>']);
+          return;
+        }
+      });
+      start();
+    }
+  };
+
+  var GAMES = [G_SNAKE, G_BREAK, G_2048, G_MEM, G_MINE, G_PONG, G_DODGE, G_IDLE, G_EXAM, G_ZOMBIE, G_TOWER];
   var CATS = ['全部', '街机', '益智', '反应', '经营', '剧情', '生存'];
 
   /* =========================================================
